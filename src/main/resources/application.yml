@@ -6,3 +6,10 @@ spring:
     properties:
       hibernate:
         format_sql: true
+openai:
+  api:
+    organization_id: ${OPENAI_API_ORGANIZATION_ID}
+    project_id: ${OPENAI_API_PROJECT_ID}
+    key: ${OPENAI_API_KEY}
+  model:
+    name: "gpt-4o-mini"
