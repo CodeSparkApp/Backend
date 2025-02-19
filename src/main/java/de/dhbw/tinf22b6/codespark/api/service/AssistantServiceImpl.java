@@ -1,5 +1,10 @@
 package de.dhbw.tinf22b6.codespark.api.service;
 
+import de.dhbw.tinf22b6.codespark.api.common.SenderType;
+import de.dhbw.tinf22b6.codespark.api.model.Conversation;
+import de.dhbw.tinf22b6.codespark.api.model.ConversationMessage;
+import de.dhbw.tinf22b6.codespark.api.payload.request.PromptRequest;
+import de.dhbw.tinf22b6.codespark.api.repository.ConversationRepository;
 import de.dhbw.tinf22b6.codespark.api.service.interfaces.AssistantService;
 import io.github.sashirestela.openai.SimpleOpenAI;
 import io.github.sashirestela.openai.domain.chat.Chat;
@@ -13,15 +18,19 @@ import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBo
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @Service
 public class AssistantServiceImpl implements AssistantService {
 	private final SimpleOpenAI openAI;
 	private final ChatRequest.ChatRequestBuilder chatRequestBase;
+	private final ConversationRepository conversationRepository;
 
-	public AssistantServiceImpl(@Autowired Environment environment) {
+	public AssistantServiceImpl(@Autowired Environment environment,
+								@Autowired ConversationRepository conversationRepository) {
 		this.openAI = SimpleOpenAI.builder()
 				.apiKey(environment.getRequiredProperty("openai.api.key"))
 				.organizationId(environment.getRequiredProperty("openai.api.organization_id"))
@@ -30,46 +39,99 @@ public class AssistantServiceImpl implements AssistantService {
 
 		this.chatRequestBase = ChatRequest.builder()
 				.model(environment.getRequiredProperty("openai.model.name"))
-				.temperature(0.4)
-				.maxCompletionTokens(500);
+				.temperature(0.4);
+				// .maxCompletionTokens(500);
+
+		this.conversationRepository = conversationRepository;
 	}
 
 	@Override
-	public String sendPrompt(String prompt) {
+	public String processPrompt(PromptRequest request) {
+		// Retrieve previous conversation
+		Conversation conversation = conversationRepository.findByUserId(request.getUserId())
+				.orElseGet(() -> new Conversation(request.getUserId()));
+
+		List<ChatMessage> chatHistory = parseConversation(conversation);
+		chatHistory.add(ChatMessage.UserMessage.of(request.getPrompt()));
+
+		// Build request with existing history
 		ChatRequest chatRequest = chatRequestBase
-				.message(ChatMessage.UserMessage.of(prompt))
+				.messages(chatHistory)
 				.build();
+
 		CompletableFuture<Chat> futureChat = openAI.chatCompletions().create(chatRequest);
 		Chat chatResponse = futureChat.join();
-		return chatResponse.firstContent();
+		String response = chatResponse.firstContent();
+
+		// Save prompt and response to history
+		conversation.addMessage(new ConversationMessage(SenderType.USER, request.getPrompt()));
+		conversation.addMessage(new ConversationMessage(SenderType.ASSISTANT, response));
+		conversationRepository.save(conversation);
+
+		return response;
 	}
 
 	@Override
-	public StreamingResponseBody sendPromptStream(String prompt) {
+	public StreamingResponseBody processPromptStream(PromptRequest request) {
+		// Retrieve previous conversation
+		Conversation conversation = conversationRepository.findByUserId(request.getUserId())
+				.orElseGet(() -> new Conversation(request.getUserId()));
+
+		List<ChatMessage> chatHistory = parseConversation(conversation);
+		chatHistory.add(ChatMessage.UserMessage.of(request.getPrompt()));
+
+		conversation.addMessage(new ConversationMessage(SenderType.USER, request.getPrompt()));
+		conversationRepository.save(conversation);
+
+		// Build request with existing history
 		ChatRequest chatRequest = chatRequestBase
-				.message(ChatMessage.UserMessage.of(prompt))
+				.messages(chatHistory)
 				.stream(true)
 				.build();
 
 		return outputStream -> {
 			try (Stream<Chat> stream = openAI.chatCompletions().createStream(chatRequest).join()) {
+				// Save assistant response
+				StringBuilder response = new StringBuilder();
+
 				stream.forEach(chunk -> {
-					String message = chunk.getChoices().stream()
+					String messageChunk = chunk.getChoices().stream()
 							.findFirst()
 							.map(choice -> choice.getMessage().getContent())
 							.orElse("");
-					if (!message.isEmpty()) {
+
+					if (!messageChunk.isEmpty()) {
 						try {
-							outputStream.write(message.getBytes(StandardCharsets.UTF_8));
+							// Send chunk to client
+							outputStream.write(messageChunk.getBytes(StandardCharsets.UTF_8));
 							outputStream.flush();
+
+							// Append chunk to assistant response
+							response.append(messageChunk);
 						} catch (IOException e) {
 							throw new UncheckedIOException("Error writing to output stream", e);
 						}
 					}
 				});
+
+				// Save the complete assistant response to conversation
+				if (!response.isEmpty()) {
+					conversation.addMessage(new ConversationMessage(SenderType.ASSISTANT, response.toString()));
+					conversationRepository.save(conversation);
+				}
 			} catch (Exception e) {
 				throw new RuntimeException("Error processing streaming response", e);
 			}
 		};
+	}
+
+	private List<ChatMessage> parseConversation(Conversation conversation) {
+		return conversation.getMessages().stream()
+				.map(m -> switch (m.getSenderType()) {
+					case USER -> ChatMessage.UserMessage.of(m.getMessage());
+					case ASSISTANT -> ChatMessage.AssistantMessage.of(m.getMessage());
+					default -> ChatMessage.SystemMessage.of(m.getMessage());
+				})
+				.collect(Collectors.toList());
 	}
 }

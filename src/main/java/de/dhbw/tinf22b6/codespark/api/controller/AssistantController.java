@@ -1,5 +1,6 @@
 package de.dhbw.tinf22b6.codespark.api.controller;
 
+import de.dhbw.tinf22b6.codespark.api.payload.request.PromptRequest;
 import de.dhbw.tinf22b6.codespark.api.service.interfaces.AssistantService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
@@ -20,13 +21,17 @@ public class AssistantController {
 	}
 
 	@PostMapping("/prompt")
-	public String sendPrompt(@RequestBody String prompt) {
-		return assistantService.sendPrompt(prompt);
+	public ResponseEntity<String> processPrompt(@RequestBody PromptRequest request) {
+		String response = assistantService.processPrompt(request);
+
+		return ResponseEntity.ok()
+				.contentType(MediaType.TEXT_PLAIN)
+				.body(response);
 	}
 
 	@PostMapping(value = "/prompt-stream")
-	public ResponseEntity<StreamingResponseBody> sendPromptStream(@RequestBody String prompt) {
-		StreamingResponseBody responseBody = assistantService.sendPromptStream(prompt);
+	public ResponseEntity<StreamingResponseBody> processPromptStream(@RequestBody PromptRequest request) {
+		StreamingResponseBody responseBody = assistantService.processPromptStream(request);
 
 		return ResponseEntity.ok()
 				.contentType(MediaType.TEXT_PLAIN)
