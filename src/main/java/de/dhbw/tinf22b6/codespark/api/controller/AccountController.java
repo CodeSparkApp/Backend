@@ -38,7 +38,9 @@ public class AccountController {
 	public ResponseEntity<?> verifyEmail(@RequestParam("token") String token) {
 		try {
 			accountService.verifyEmail(token);
-			return ResponseEntity.status(HttpStatus.OK).body("Email verified successfully");
+			return ResponseEntity.status(HttpStatus.OK)
+					.contentType(MediaType.TEXT_PLAIN)
+					.body("Email verified successfully");
 		} catch (InvalidVerificationTokenException e) {
 			return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
 					.contentType(MediaType.TEXT_PLAIN)
