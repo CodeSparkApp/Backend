@@ -3,8 +3,10 @@ package de.dhbw.tinf22b6.codespark.api.model;
 import de.dhbw.tinf22b6.codespark.api.common.MessageSenderType;
 import jakarta.persistence.*;
 import lombok.Getter;
+import lombok.Setter;
 
 @Getter
+@Setter
 @Entity
 public class ConversationMessage {
 	@Id
