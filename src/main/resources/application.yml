@@ -12,10 +12,24 @@ spring:
     properties:
       hibernate:
         format_sql: true
+    open-in-view: false
   h2:
     console:
       enabled: true
       path: /h2-console
+
+auth:
+  jwt:
+    access_token_expiration: 900000 # 15 minutes
+    refresh_token_expiration: 86400000 # 24 hours
+    secret: ${JWT_SECRET_KEY}
+
+smtp:
+  host: "smtp.gmail.com"
+  port: 587
+  email: ${SMTP_ACCOUNT_EMAIL}
+  password: ${SMTP_ACCOUNT_PASSWORD}
+
 openai:
   api:
     organization_id: ${OPENAI_API_ORGANIZATION_ID}

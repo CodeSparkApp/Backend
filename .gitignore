@@ -1,6 +1,7 @@
 # IntelliJ IDEA
 .idea/*
 !.idea/runConfigurations/
+codespark.iml
 
 # Java
 target/

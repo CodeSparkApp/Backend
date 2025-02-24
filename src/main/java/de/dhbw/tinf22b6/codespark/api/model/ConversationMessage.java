@@ -1,6 +1,6 @@
 package de.dhbw.tinf22b6.codespark.api.model;
 
-import de.dhbw.tinf22b6.codespark.api.common.SenderType;
+import de.dhbw.tinf22b6.codespark.api.common.MessageSenderType;
 import jakarta.persistence.*;
 import lombok.Getter;
 
@@ -12,14 +12,14 @@ public class ConversationMessage {
 	private Long id;
 
 	@Enumerated(EnumType.STRING)
-	private SenderType senderType;
+	private MessageSenderType senderType;
 
 	@Column(columnDefinition = "TEXT")
 	private String message;
 
 	public ConversationMessage() {}
 
-	public ConversationMessage(SenderType senderType, String message) {
+	public ConversationMessage(MessageSenderType senderType, String message) {
 		this.senderType = senderType;
 		this.message = message;
 	}

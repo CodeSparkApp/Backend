@@ -1,8 +1,9 @@
 package de.dhbw.tinf22b6.codespark.api.controller;
 
 import de.dhbw.tinf22b6.codespark.api.payload.request.PromptRequest;
-import de.dhbw.tinf22b6.codespark.api.service.interfaces.AssistantService;
+import de.dhbw.tinf22b6.codespark.api.service.interfaces.ConversationService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -13,27 +14,27 @@ import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBo
 
 @RestController
 @RequestMapping(value = "/api/v1/openai")
-public class AssistantController {
-	private final AssistantService assistantService;
+public class ConversationController {
+	private final ConversationService conversationService;
 
-	public AssistantController(@Autowired AssistantService assistantService) {
-		this.assistantService = assistantService;
+	public ConversationController(@Autowired ConversationService conversationService) {
+		this.conversationService = conversationService;
 	}
 
 	@PostMapping("/prompt")
-	public ResponseEntity<String> processPrompt(@RequestBody PromptRequest request) {
-		String response = assistantService.processPrompt(request);
+	public ResponseEntity<?> processPrompt(@RequestBody PromptRequest request) {
+		String response = conversationService.processPrompt(request);
 
-		return ResponseEntity.ok()
+		return ResponseEntity.status(HttpStatus.OK)
 				.contentType(MediaType.TEXT_PLAIN)
 				.body(response);
 	}
 
 	@PostMapping(value = "/prompt-stream")
-	public ResponseEntity<StreamingResponseBody> processPromptStream(@RequestBody PromptRequest request) {
-		StreamingResponseBody responseBody = assistantService.processPromptStream(request);
+	public ResponseEntity<?> processPromptStream(@RequestBody PromptRequest request) {
+		StreamingResponseBody responseBody = conversationService.processPromptStream(request);
 
-		return ResponseEntity.ok()
+		return ResponseEntity.status(HttpStatus.OK)
 				.contentType(MediaType.TEXT_PLAIN)
 				.body(responseBody);
 	}

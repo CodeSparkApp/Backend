@@ -1,11 +1,11 @@
 package de.dhbw.tinf22b6.codespark.api.service;
 
-import de.dhbw.tinf22b6.codespark.api.common.SenderType;
+import de.dhbw.tinf22b6.codespark.api.common.MessageSenderType;
 import de.dhbw.tinf22b6.codespark.api.model.Conversation;
 import de.dhbw.tinf22b6.codespark.api.model.ConversationMessage;
 import de.dhbw.tinf22b6.codespark.api.payload.request.PromptRequest;
 import de.dhbw.tinf22b6.codespark.api.repository.ConversationRepository;
-import de.dhbw.tinf22b6.codespark.api.service.interfaces.AssistantService;
+import de.dhbw.tinf22b6.codespark.api.service.interfaces.ConversationService;
 import io.github.sashirestela.openai.SimpleOpenAI;
 import io.github.sashirestela.openai.domain.chat.Chat;
 import io.github.sashirestela.openai.domain.chat.ChatMessage;
@@ -24,21 +24,21 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @Service
-public class AssistantServiceImpl implements AssistantService {
+public class ConversationServiceImpl implements ConversationService {
 	private final SimpleOpenAI openAI;
 	private final ChatRequest.ChatRequestBuilder chatRequestBase;
 	private final ConversationRepository conversationRepository;
 
-	public AssistantServiceImpl(@Autowired Environment environment,
-								@Autowired ConversationRepository conversationRepository) {
+	public ConversationServiceImpl(@Autowired Environment env,
+								   @Autowired ConversationRepository conversationRepository) {
 		this.openAI = SimpleOpenAI.builder()
-				.apiKey(environment.getRequiredProperty("openai.api.key"))
-				.organizationId(environment.getRequiredProperty("openai.api.organization_id"))
-				.projectId(environment.getRequiredProperty("openai.api.project_id"))
+				.apiKey(env.getRequiredProperty("openai.api.key"))
+				.organizationId(env.getRequiredProperty("openai.api.organization_id"))
+				.projectId(env.getRequiredProperty("openai.api.project_id"))
 				.build();
 
 		this.chatRequestBase = ChatRequest.builder()
-				.model(environment.getRequiredProperty("openai.model.name"))
+				.model(env.getRequiredProperty("openai.model.name"))
 				.temperature(0.4);
 				// .maxCompletionTokens(500);
 
@@ -64,8 +64,8 @@ public class AssistantServiceImpl implements AssistantService {
 		String response = chatResponse.firstContent();
 
 		// Save prompt and response to history
-		conversation.addMessage(new ConversationMessage(SenderType.USER, request.getPrompt()));
-		conversation.addMessage(new ConversationMessage(SenderType.ASSISTANT, response));
+		conversation.addMessage(new ConversationMessage(MessageSenderType.USER, request.getPrompt()));
+		conversation.addMessage(new ConversationMessage(MessageSenderType.ASSISTANT, response));
 		conversationRepository.save(conversation);
 
 		return response;
@@ -80,7 +80,7 @@ public class AssistantServiceImpl implements AssistantService {
 		List<ChatMessage> chatHistory = parseConversation(conversation);
 		chatHistory.add(ChatMessage.UserMessage.of(request.getPrompt()));
 
-		conversation.addMessage(new ConversationMessage(SenderType.USER, request.getPrompt()));
+		conversation.addMessage(new ConversationMessage(MessageSenderType.USER, request.getPrompt()));
 		conversationRepository.save(conversation);
 
 		// Build request with existing history
@@ -116,7 +116,7 @@ public class AssistantServiceImpl implements AssistantService {
 
 				// Save the complete assistant response to conversation
 				if (!response.isEmpty()) {
-					conversation.addMessage(new ConversationMessage(SenderType.ASSISTANT, response.toString()));
+					conversation.addMessage(new ConversationMessage(MessageSenderType.ASSISTANT, response.toString()));
 					conversationRepository.save(conversation);
 				}
 			} catch (Exception e) {

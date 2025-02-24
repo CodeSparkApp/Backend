@@ -10,10 +10,13 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class PromptRequest {
-	@JsonProperty("user_id")
-	private Long userId;
+public class AccountCreateRequest {
+	@JsonProperty("username")
+	private String username;
 
-	@JsonProperty("prompt")
-	private String prompt;
+	@JsonProperty("email")
+	private String email;
+
+	@JsonProperty("password")
+	private String password;
 }

@@ -1,4 +1,4 @@
-package de.dhbw.tinf22b6.codespark.api.payload.request;
+package de.dhbw.tinf22b6.codespark.api.payload.response;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
@@ -10,10 +10,10 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class PromptRequest {
-	@JsonProperty("user_id")
-	private Long userId;
+public class TokenResponse {
+	@JsonProperty("access_token")
+	private String accessToken;
 
-	@JsonProperty("prompt")
-	private String prompt;
+	@JsonProperty("refresh_token")
+	private String refreshToken;
 }

@@ -10,10 +10,7 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class PromptRequest {
-	@JsonProperty("user_id")
-	private Long userId;
-
-	@JsonProperty("prompt")
-	private String prompt;
+public class RefreshTokenRequest {
+	@JsonProperty("refresh_token")
+	private String refreshToken;
 }
