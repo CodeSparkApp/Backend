@@ -41,7 +41,7 @@ public class ConversationController {
 	}
 
 	@PostMapping(value = "/prompt-stream")
-	public ResponseEntity<?> processPromptStream(@RequestBody PromptRequest request, Principal principal) {
+	public ResponseEntity<StreamingResponseBody> processPromptStream(@RequestBody PromptRequest request, Principal principal) {
 		String username = principal.getName();
 		UUID userId = accountService.getUserIdByUsername(username);
 
