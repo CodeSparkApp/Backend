@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
+import java.util.UUID;
 
 @Repository
 public class ConversationRepository {
@@ -15,7 +16,7 @@ public class ConversationRepository {
 		this.conversationRepository = conversationRepository;
 	}
 
-	public Optional<Conversation> findByUserId(Long userId) {
+	public Optional<Conversation> findByUserId(UUID userId) {
 		return conversationRepository.findByUserId(userId);
 	}
 

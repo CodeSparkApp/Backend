@@ -11,9 +11,6 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 public class PromptRequest {
-	@JsonProperty("user_id")
-	private Long userId;
-
 	@JsonProperty("prompt")
 	private String prompt;
 }

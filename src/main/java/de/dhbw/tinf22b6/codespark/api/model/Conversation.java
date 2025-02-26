@@ -6,16 +6,17 @@ import lombok.Setter;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 @Getter
 @Setter
 @Entity
 public class Conversation {
 	@Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	private Long id;
+	@GeneratedValue(strategy = GenerationType.UUID)
+	private UUID id;
 
-	private Long userId;
+	private UUID userId;
 
 	@OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
 	@JoinColumn(name = "conversation_id")
@@ -23,7 +24,7 @@ public class Conversation {
 
 	public Conversation() {}
 
-	public Conversation(Long userId) {
+	public Conversation(UUID userId) {
 		this.userId = userId;
 	}
 

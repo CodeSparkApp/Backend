@@ -19,6 +19,7 @@ import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -46,10 +47,10 @@ public class ConversationServiceImpl implements ConversationService {
 	}
 
 	@Override
-	public String processPrompt(PromptRequest request) {
+	public String processPrompt(UUID userId, PromptRequest request) {
 		// Retrieve previous conversation
-		Conversation conversation = conversationRepository.findByUserId(request.getUserId())
-				.orElseGet(() -> new Conversation(request.getUserId()));
+		Conversation conversation = conversationRepository.findByUserId(userId)
+				.orElseGet(() -> new Conversation(userId));
 
 		List<ChatMessage> chatHistory = parseConversation(conversation);
 		chatHistory.add(ChatMessage.UserMessage.of(request.getPrompt()));
@@ -72,10 +73,10 @@ public class ConversationServiceImpl implements ConversationService {
 	}
 
 	@Override
-	public StreamingResponseBody processPromptStream(PromptRequest request) {
+	public StreamingResponseBody processPromptStream(UUID userId, PromptRequest request) {
 		// Retrieve previous conversation
-		Conversation conversation = conversationRepository.findByUserId(request.getUserId())
-				.orElseGet(() -> new Conversation(request.getUserId()));
+		Conversation conversation = conversationRepository.findByUserId(userId)
+				.orElseGet(() -> new Conversation(userId));
 
 		List<ChatMessage> chatHistory = parseConversation(conversation);
 		chatHistory.add(ChatMessage.UserMessage.of(request.getPrompt()));
