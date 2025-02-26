@@ -32,6 +32,7 @@ public class SecurityConfig {
 								"/api/v1/account/verify",
 								"/api/v1/account/request-reset",
 								"/api/v1/account/reset-password",
+
 								"/api/v1/auth/login",
 								"/api/v1/auth/refresh"
 						).permitAll()
