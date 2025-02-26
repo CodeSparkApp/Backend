@@ -8,7 +8,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.web.context.RequestAttributeSecurityContextRepository;
+import org.springframework.security.web.context.SecurityContextRepository;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
@@ -17,6 +20,7 @@ import java.util.Collections;
 
 @Component
 public class JwtFilter extends OncePerRequestFilter {
+	private final SecurityContextRepository securityContextRepository = new RequestAttributeSecurityContextRepository();
 	private final JwtUtil jwtUtil;
 
 	public JwtFilter(@Autowired JwtUtil jwtUtil) {
@@ -34,10 +38,18 @@ public class JwtFilter extends OncePerRequestFilter {
 			if (jwtUtil.validateToken(token)) {
 				String username = jwtUtil.extractUsername(token);
 				String role = jwtUtil.extractRole(token);
+
 				UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(
+						// Prefix with 'ROLE_' so 'hasRole()' can be used instead of 'hasAuthority()'
 						username, null, Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + role))
 				);
-				SecurityContextHolder.getContext().setAuthentication(auth);
+
+				SecurityContext context = SecurityContextHolder.createEmptyContext();
+				context.setAuthentication(auth);
+				SecurityContextHolder.setContext(context);
+
+				// Explicitly save the SecurityContext for async requests
+				securityContextRepository.saveContext(context, request, response);
 			}
 		}
 
