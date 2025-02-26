@@ -1,13 +1,16 @@
 spring:
+  # datasource:
+    # url: jdbc:h2:mem:testdb
+    # driver-class-name: org.h2.Driver
+    # username: sa
+    # password:
   datasource:
-    url: jdbc:h2:mem:testdb
-    driverClassName: org.h2.Driver
-    username: sa
-    password:
+    url: ${DATABASE_URL}
+    username: ${DATABASE_USERNAME}
+    password: ${DATABASE_PASSWORD}
   jpa:
     hibernate:
       ddl-auto: update
-      # ddl-auto: none
     show-sql: false
     properties:
       hibernate:
