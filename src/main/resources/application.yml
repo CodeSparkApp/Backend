@@ -1,9 +1,4 @@
 spring:
-  # datasource:
-    # url: jdbc:h2:mem:testdb
-    # driver-class-name: org.h2.Driver
-    # username: sa
-    # password:
   datasource:
     url: ${DATABASE_URL}
     username: ${DATABASE_USERNAME}
@@ -12,14 +7,7 @@ spring:
     hibernate:
       ddl-auto: update
     show-sql: false
-    properties:
-      hibernate:
-        format_sql: true
     open-in-view: false
-  h2:
-    console:
-      enabled: true
-      path: /h2-console
 
 auth:
   jwt:
