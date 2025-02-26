@@ -10,6 +10,7 @@ import io.github.sashirestela.openai.SimpleOpenAI;
 import io.github.sashirestela.openai.domain.chat.Chat;
 import io.github.sashirestela.openai.domain.chat.ChatMessage;
 import io.github.sashirestela.openai.domain.chat.ChatRequest;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
@@ -47,6 +48,7 @@ public class ConversationServiceImpl implements ConversationService {
 	}
 
 	@Override
+	@Transactional
 	public String processPrompt(UUID userId, PromptRequest request) {
 		// Retrieve previous conversation
 		Conversation conversation = conversationRepository.findByUserId(userId)
@@ -73,6 +75,7 @@ public class ConversationServiceImpl implements ConversationService {
 	}
 
 	@Override
+	@Transactional
 	public StreamingResponseBody processPromptStream(UUID userId, PromptRequest request) {
 		// Retrieve previous conversation
 		Conversation conversation = conversationRepository.findByUserId(userId)
@@ -122,6 +125,9 @@ public class ConversationServiceImpl implements ConversationService {
 				}
 			} catch (Exception e) {
 				throw new RuntimeException("Error processing streaming response", e);
+			} finally {
+				outputStream.flush();
+				outputStream.close();
 			}
 		};
 	}
