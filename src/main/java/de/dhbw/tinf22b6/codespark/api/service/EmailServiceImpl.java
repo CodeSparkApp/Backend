@@ -33,6 +33,19 @@ public class EmailServiceImpl implements EmailService {
 	}
 
 	@Override
+	public void sendVerificationConfirmationEmail(String to) {
+		String message = "Your account has been verified successfully.";
+
+		SimpleMailMessage email = new SimpleMailMessage();
+		email.setTo(to);
+		email.setFrom(String.format("CodeSpark <%s>", env.getRequiredProperty("smtp.email")));
+		email.setSubject("Verification Confirmation");
+		email.setText(message);
+
+		mailSender.send(email);
+	}
+
+	@Override
 	public void sendPasswordResetEmail(String to, String token) {
 		String resetLink = "http://localhost:8080/api/v1/account/reset-password?token=" + token;
 		String message = "Click here to reset your password: " + resetLink;
@@ -41,6 +54,19 @@ public class EmailServiceImpl implements EmailService {
 		email.setTo(to);
 		email.setFrom(String.format("CodeSpark <%s>", env.getRequiredProperty("smtp.email")));
 		email.setSubject("Password Reset Request");
+		email.setText(message);
+
+		mailSender.send(email);
+	}
+
+	@Override
+	public void sendPasswordResetConfirmationEmail(String to) {
+		String message = "The password for your account has been changed successfully.";
+
+		SimpleMailMessage email = new SimpleMailMessage();
+		email.setTo(to);
+		email.setFrom(String.format("CodeSpark <%s>", env.getRequiredProperty("smtp.email")));
+		email.setSubject("Password Reset Confirmation");
 		email.setText(message);
 
 		mailSender.send(email);

@@ -15,6 +15,7 @@ import de.dhbw.tinf22b6.codespark.api.security.JwtUtil;
 import de.dhbw.tinf22b6.codespark.api.service.interfaces.AccountService;
 import de.dhbw.tinf22b6.codespark.api.service.interfaces.EmailService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -68,6 +69,8 @@ public class AccountServiceImpl implements AccountService {
 		account.setVerified(true);
 		account.setVerificationToken(null);
 		accountRepository.save(account);
+
+		emailService.sendVerificationConfirmationEmail(account.getEmail());
 	}
 
 	@Override
@@ -117,5 +120,14 @@ public class AccountServiceImpl implements AccountService {
 		account.setPassword(passwordEncoder.encode(request.getPassword()));
 		account.setVerificationToken(null);
 		accountRepository.save(account);
+
+		emailService.sendPasswordResetConfirmationEmail(account.getEmail());
+	}
+
+	@Override
+	public UUID getUserIdByUsername(String username) throws UsernameNotFoundException {
+		return accountRepository.findByUsername(username)
+				.orElseThrow(() -> new UsernameNotFoundException(String.format("User '%s' not found", username)))
+				.getId();
 	}
 }

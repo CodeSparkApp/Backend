@@ -8,6 +8,9 @@ import de.dhbw.tinf22b6.codespark.api.payload.request.AccountCreateRequest;
 import de.dhbw.tinf22b6.codespark.api.payload.request.LoginRequest;
 import de.dhbw.tinf22b6.codespark.api.payload.request.PasswordResetRequest;
 import de.dhbw.tinf22b6.codespark.api.payload.response.TokenResponse;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+
+import java.util.UUID;
 
 public interface AccountService {
 	void createAccount(AccountCreateRequest request) throws AccountAlreadyExistsException;
@@ -15,4 +18,5 @@ public interface AccountService {
 	TokenResponse loginAccount(LoginRequest request) throws InvalidAccountCredentialsException, UnverifiedAccountException;
 	void requestPasswordReset(String email);
 	void resetPassword(PasswordResetRequest request) throws InvalidVerificationTokenException;
+	UUID getUserIdByUsername(String username) throws UsernameNotFoundException;
 }
