@@ -65,9 +65,8 @@
 		<dependency>
 			<groupId>com.h2database</groupId>
 			<artifactId>h2</artifactId>
-			<scope>runtime, test</scope>
+			<scope>test</scope>
 		</dependency>
-
 
 		<!-- Secrets -->
 		<dependency>
