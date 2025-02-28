@@ -1,11 +1,12 @@
 package de.dhbw.tinf22b6.codespark.api.service.interfaces;
 
+import de.dhbw.tinf22b6.codespark.api.exception.UserNotFoundException;
 import de.dhbw.tinf22b6.codespark.api.payload.request.PromptRequest;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import java.util.UUID;
 
 public interface ConversationService {
-	String processPrompt(UUID userId, PromptRequest request);
-	StreamingResponseBody processPromptStream(UUID userId, PromptRequest request);
+	String processPrompt(UUID userId, PromptRequest request) throws UserNotFoundException;
+	StreamingResponseBody processPromptStream(UUID userId, PromptRequest request) throws UserNotFoundException;
 }

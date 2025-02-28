@@ -1,5 +1,6 @@
 package de.dhbw.tinf22b6.codespark.api.controller;
 
+import de.dhbw.tinf22b6.codespark.api.exception.UserNotFoundException;
 import de.dhbw.tinf22b6.codespark.api.payload.request.PromptRequest;
 import de.dhbw.tinf22b6.codespark.api.service.interfaces.AccountService;
 import de.dhbw.tinf22b6.codespark.api.service.interfaces.ConversationService;
@@ -30,25 +31,35 @@ public class ConversationController {
 
 	@PostMapping("/prompt")
 	public ResponseEntity<?> processPrompt(@RequestBody PromptRequest request, Principal principal) {
-		String username = principal.getName();
-		UUID userId = accountService.getUserIdByUsername(username);
+		try {
+			String username = principal.getName();
+			UUID userId = accountService.getUserIdByUsername(username);
 
-		String response = conversationService.processPrompt(userId, request);
+			String response = conversationService.processPrompt(userId, request);
 
-		return ResponseEntity.status(HttpStatus.OK)
-				.contentType(MediaType.TEXT_PLAIN)
-				.body(response);
+			return ResponseEntity.status(HttpStatus.OK)
+					.contentType(MediaType.TEXT_PLAIN)
+					.body(response);
+		} catch (UserNotFoundException e) {
+			return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+					.body(null);
+		}
 	}
 
 	@PostMapping(value = "/prompt-stream")
 	public ResponseEntity<StreamingResponseBody> processPromptStream(@RequestBody PromptRequest request, Principal principal) {
-		String username = principal.getName();
-		UUID userId = accountService.getUserIdByUsername(username);
+		try {
+			String username = principal.getName();
+			UUID userId = accountService.getUserIdByUsername(username);
 
-		StreamingResponseBody responseBody = conversationService.processPromptStream(userId, request);
+			StreamingResponseBody responseBody = conversationService.processPromptStream(userId, request);
 
-		return ResponseEntity.status(HttpStatus.OK)
-				.contentType(MediaType.TEXT_PLAIN)
-				.body(responseBody);
+			return ResponseEntity.status(HttpStatus.OK)
+					.contentType(MediaType.TEXT_PLAIN)
+					.body(responseBody);
+		} catch (UserNotFoundException e) {
+			return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+					.body(null);
+		}
 	}
 }

@@ -16,7 +16,9 @@ public class Conversation {
 	@GeneratedValue(strategy = GenerationType.UUID)
 	private UUID id;
 
-	private UUID userId;
+	@ManyToOne
+	@JoinColumn(nullable = false)
+	private Account account;
 
 	@OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
 	@JoinColumn(name = "conversation_id")
@@ -24,8 +26,8 @@ public class Conversation {
 
 	public Conversation() {}
 
-	public Conversation(UUID userId) {
-		this.userId = userId;
+	public Conversation(Account account) {
+		this.account = account;
 	}
 
 	public void addMessage(ConversationMessage message) {

@@ -27,18 +27,16 @@ public class Account {
 	@Enumerated(EnumType.STRING)
 	private UserRoleType role;
 
+	@Column(nullable = false)
 	private boolean verified;
-
-	private String verificationToken;
 
 	public Account() {}
 
-	public Account(String username, String email, String password, UserRoleType role, boolean verified, String verificationToken) {
+	public Account(String username, String email, String password, UserRoleType role, boolean verified) {
 		this.username = username;
 		this.email = email;
 		this.password = password;
 		this.role = role;
 		this.verified = verified;
-		this.verificationToken = verificationToken;
 	}
 }

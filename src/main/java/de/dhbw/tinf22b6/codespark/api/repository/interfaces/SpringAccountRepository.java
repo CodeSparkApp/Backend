@@ -9,5 +9,4 @@ import java.util.UUID;
 public interface SpringAccountRepository extends JpaRepository<Account, UUID> {
 	Optional<Account> findByUsername(String username);
 	Optional<Account> findByEmail(String email);
-	Optional<Account> findByVerificationToken(String token);
 }

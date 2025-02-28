@@ -1,16 +1,19 @@
 package de.dhbw.tinf22b6.codespark.api.service;
 
 import de.dhbw.tinf22b6.codespark.api.common.UserRoleType;
+import de.dhbw.tinf22b6.codespark.api.common.VerificationTokenType;
 import de.dhbw.tinf22b6.codespark.api.exception.AccountAlreadyExistsException;
 import de.dhbw.tinf22b6.codespark.api.exception.InvalidAccountCredentialsException;
 import de.dhbw.tinf22b6.codespark.api.exception.InvalidVerificationTokenException;
 import de.dhbw.tinf22b6.codespark.api.exception.UnverifiedAccountException;
 import de.dhbw.tinf22b6.codespark.api.model.Account;
+import de.dhbw.tinf22b6.codespark.api.model.VerificationToken;
 import de.dhbw.tinf22b6.codespark.api.payload.request.AccountCreateRequest;
 import de.dhbw.tinf22b6.codespark.api.payload.request.LoginRequest;
 import de.dhbw.tinf22b6.codespark.api.payload.request.PasswordResetRequest;
 import de.dhbw.tinf22b6.codespark.api.payload.response.TokenResponse;
 import de.dhbw.tinf22b6.codespark.api.repository.AccountRepository;
+import de.dhbw.tinf22b6.codespark.api.repository.VerificationTokenRepository;
 import de.dhbw.tinf22b6.codespark.api.security.JwtUtil;
 import de.dhbw.tinf22b6.codespark.api.service.interfaces.AccountService;
 import de.dhbw.tinf22b6.codespark.api.service.interfaces.EmailService;
@@ -19,21 +22,25 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.time.Instant;
 import java.util.Optional;
 import java.util.UUID;
 
 @Service
 public class AccountServiceImpl implements AccountService {
 	private final AccountRepository accountRepository;
+	private final VerificationTokenRepository verificationTokenRepository;
 	private final EmailService emailService;
 	private final PasswordEncoder passwordEncoder;
 	private final JwtUtil jwtUtil;
 
 	public AccountServiceImpl(@Autowired AccountRepository accountRepository,
+							  @Autowired VerificationTokenRepository verificationTokenRepository,
 							  @Autowired EmailService emailService,
 							  @Autowired PasswordEncoder passwordEncoder,
 							  @Autowired JwtUtil jwtUtil) {
 		this.accountRepository = accountRepository;
+		this.verificationTokenRepository = verificationTokenRepository;
 		this.emailService = emailService;
 		this.passwordEncoder = passwordEncoder;
 		this.jwtUtil = jwtUtil;
@@ -50,25 +57,35 @@ public class AccountServiceImpl implements AccountService {
 		}
 
 		String encodedPassword = passwordEncoder.encode(request.getPassword());
-		String token = UUID.randomUUID().toString();
-		Account account = new Account(request.getUsername(), request.getEmail(), encodedPassword, UserRoleType.USER, false, token);
-
+		Account account = new Account(request.getUsername(), request.getEmail(), encodedPassword, UserRoleType.USER, false);
 		accountRepository.save(account);
+
+		String token = UUID.randomUUID().toString();
+		Instant expiryDate = Instant.now().plusSeconds(86400); // 1 Day
+		verificationTokenRepository.save(new VerificationToken(token, account, VerificationTokenType.EMAIL_VERIFICATION, expiryDate));
 
 		emailService.sendVerificationEmail(account.getEmail(), token);
 	}
 
 	@Override
 	public void verifyEmail(String token) throws InvalidVerificationTokenException {
-		Optional<Account> optionalAccount = accountRepository.findByVerificationToken(token);
-		if (optionalAccount.isEmpty()) {
-			throw new InvalidVerificationTokenException();
+		Optional<VerificationToken> optionalToken =
+				verificationTokenRepository.findByTokenAndType(token, VerificationTokenType.EMAIL_VERIFICATION);
+
+		if (optionalToken.isEmpty()) {
+			throw new InvalidVerificationTokenException("Invalid verification token");
 		}
 
-		Account account = optionalAccount.get();
+		VerificationToken verificationToken = optionalToken.get();
+		if (verificationToken.isExpired()) {
+			// TODO
+			return;
+		}
+
+		Account account = verificationToken.getAccount();
 		account.setVerified(true);
-		account.setVerificationToken(null);
 		accountRepository.save(account);
+		verificationTokenRepository.delete(verificationToken);
 
 		emailService.sendVerificationConfirmationEmail(account.getEmail());
 	}
@@ -98,28 +115,37 @@ public class AccountServiceImpl implements AccountService {
 	public void requestPasswordReset(String email) {
 		Optional<Account> optionalAccount = accountRepository.findByEmail(email);
 		if (optionalAccount.isEmpty()) {
-			// Don't notify frontend that account with this email exists
+			// Don't notify client that account with this email exists
 			return;
 		}
 
 		Account account = optionalAccount.get();
-		String resetToken = UUID.randomUUID().toString();
-		account.setVerificationToken(resetToken);
-		accountRepository.save(account);
-		emailService.sendPasswordResetEmail(email, resetToken);
+		String token = UUID.randomUUID().toString();
+		Instant expiryDate = Instant.now().plusSeconds(3600); // 1 Hour
+		verificationTokenRepository.save(new VerificationToken(token, account, VerificationTokenType.PASSWORD_RESET, expiryDate));
+
+		emailService.sendPasswordResetEmail(email, token);
 	}
 
 	@Override
 	public void resetPassword(PasswordResetRequest request) throws InvalidVerificationTokenException {
-		Optional<Account> optionalAccount = accountRepository.findByVerificationToken(request.getVerificationToken());
-		if (optionalAccount.isEmpty()) {
-			throw new InvalidVerificationTokenException();
+		Optional<VerificationToken> optionalToken =
+				verificationTokenRepository.findByTokenAndType(request.getVerificationToken(), VerificationTokenType.PASSWORD_RESET);
+
+		if (optionalToken.isEmpty()) {
+			throw new InvalidVerificationTokenException("Invalid verification token");
 		}
 
-		Account account = optionalAccount.get();
+		VerificationToken verificationToken = optionalToken.get();
+		if (verificationToken.isExpired()) {
+			// TODO
+			return;
+		}
+
+		Account account = verificationToken.getAccount();
 		account.setPassword(passwordEncoder.encode(request.getPassword()));
-		account.setVerificationToken(null);
 		accountRepository.save(account);
+		verificationTokenRepository.delete(verificationToken);
 
 		emailService.sendPasswordResetConfirmationEmail(account.getEmail());
 	}

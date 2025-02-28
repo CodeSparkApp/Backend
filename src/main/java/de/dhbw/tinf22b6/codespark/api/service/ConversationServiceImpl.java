@@ -1,9 +1,12 @@
 package de.dhbw.tinf22b6.codespark.api.service;
 
 import de.dhbw.tinf22b6.codespark.api.common.MessageSenderType;
+import de.dhbw.tinf22b6.codespark.api.exception.UserNotFoundException;
+import de.dhbw.tinf22b6.codespark.api.model.Account;
 import de.dhbw.tinf22b6.codespark.api.model.Conversation;
 import de.dhbw.tinf22b6.codespark.api.model.ConversationMessage;
 import de.dhbw.tinf22b6.codespark.api.payload.request.PromptRequest;
+import de.dhbw.tinf22b6.codespark.api.repository.AccountRepository;
 import de.dhbw.tinf22b6.codespark.api.repository.ConversationRepository;
 import de.dhbw.tinf22b6.codespark.api.service.interfaces.ConversationService;
 import io.github.sashirestela.openai.SimpleOpenAI;
@@ -29,9 +32,11 @@ import java.util.stream.Stream;
 public class ConversationServiceImpl implements ConversationService {
 	private final SimpleOpenAI openAI;
 	private final ChatRequest.ChatRequestBuilder chatRequestBase;
+	private final AccountRepository accountRepository;
 	private final ConversationRepository conversationRepository;
 
 	public ConversationServiceImpl(@Autowired Environment env,
+								   @Autowired AccountRepository accountRepository,
 								   @Autowired ConversationRepository conversationRepository) {
 		this.openAI = SimpleOpenAI.builder()
 				.apiKey(env.getRequiredProperty("openai.api.key"))
@@ -44,16 +49,14 @@ public class ConversationServiceImpl implements ConversationService {
 				.temperature(0.4);
 				// .maxCompletionTokens(500);
 
+		this.accountRepository = accountRepository;
 		this.conversationRepository = conversationRepository;
 	}
 
 	@Override
 	@Transactional
-	public String processPrompt(UUID userId, PromptRequest request) {
-		// Retrieve previous conversation
-		Conversation conversation = conversationRepository.findByUserId(userId)
-				.orElseGet(() -> new Conversation(userId));
-
+	public String processPrompt(UUID userId, PromptRequest request) throws UserNotFoundException {
+		Conversation conversation =  getOrCreateConversation(userId);
 		List<ChatMessage> chatHistory = parseConversation(conversation);
 		chatHistory.add(ChatMessage.UserMessage.of(request.getPrompt()));
 
@@ -76,11 +79,8 @@ public class ConversationServiceImpl implements ConversationService {
 
 	@Override
 	@Transactional
-	public StreamingResponseBody processPromptStream(UUID userId, PromptRequest request) {
-		// Retrieve previous conversation
-		Conversation conversation = conversationRepository.findByUserId(userId)
-				.orElseGet(() -> new Conversation(userId));
-
+	public StreamingResponseBody processPromptStream(UUID userId, PromptRequest request) throws UserNotFoundException {
+		Conversation conversation =  getOrCreateConversation(userId);
 		List<ChatMessage> chatHistory = parseConversation(conversation);
 		chatHistory.add(ChatMessage.UserMessage.of(request.getPrompt()));
 
@@ -130,6 +130,14 @@ public class ConversationServiceImpl implements ConversationService {
 				outputStream.close();
 			}
 		};
+	}
+
+	private Conversation getOrCreateConversation(UUID userId) throws UserNotFoundException {
+		Account account = accountRepository.findById(userId)
+				.orElseThrow(UserNotFoundException::new);
+
+		return conversationRepository.findByAccount(account)
+				.orElseGet(() -> new Conversation(account));
 	}
 
 	private List<ChatMessage> parseConversation(Conversation conversation) {
