@@ -31,7 +31,7 @@ import java.util.stream.Stream;
 @Service
 public class ConversationServiceImpl implements ConversationService {
 	private final SimpleOpenAI openAI;
-	private final ChatRequest.ChatRequestBuilder chatRequestBase;
+	private final Environment env;
 	private final AccountRepository accountRepository;
 	private final ConversationRepository conversationRepository;
 
@@ -44,11 +44,7 @@ public class ConversationServiceImpl implements ConversationService {
 				.projectId(env.getRequiredProperty("openai.api.project_id"))
 				.build();
 
-		this.chatRequestBase = ChatRequest.builder()
-				.model(env.getRequiredProperty("openai.model.name"))
-				.temperature(0.4);
-				// .maxCompletionTokens(500);
-
+		this.env = env;
 		this.accountRepository = accountRepository;
 		this.conversationRepository = conversationRepository;
 	}
@@ -61,7 +57,9 @@ public class ConversationServiceImpl implements ConversationService {
 		chatHistory.add(ChatMessage.UserMessage.of(request.getPrompt()));
 
 		// Build request with existing history
-		ChatRequest chatRequest = chatRequestBase
+		ChatRequest chatRequest = ChatRequest.builder()
+				.model(env.getRequiredProperty("openai.model.name"))
+				.temperature(0.4)
 				.messages(chatHistory)
 				.build();
 
@@ -88,7 +86,9 @@ public class ConversationServiceImpl implements ConversationService {
 		conversationRepository.save(conversation);
 
 		// Build request with existing history
-		ChatRequest chatRequest = chatRequestBase
+		ChatRequest chatRequest = ChatRequest.builder()
+				.model(env.getRequiredProperty("openai.model.name"))
+				.temperature(0.4)
 				.messages(chatHistory)
 				.stream(true)
 				.build();
