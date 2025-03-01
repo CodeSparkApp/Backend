@@ -1,4 +1,4 @@
-package de.dhbw.tinf22b6.codespark;
+package de.dhbw.tinf22b6.codespark.api;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
