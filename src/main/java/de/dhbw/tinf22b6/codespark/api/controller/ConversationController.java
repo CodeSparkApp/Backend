@@ -33,9 +33,9 @@ public class ConversationController {
 	public ResponseEntity<?> processPrompt(@RequestBody PromptRequest request, Principal principal) {
 		try {
 			String username = principal.getName();
-			UUID userId = accountService.getUserIdByUsername(username);
+			UUID accountId = accountService.getAccountIdByUsername(username);
 
-			String response = conversationService.processPrompt(userId, request);
+			String response = conversationService.processPrompt(accountId, request);
 
 			return ResponseEntity.status(HttpStatus.OK)
 					.contentType(MediaType.TEXT_PLAIN)
@@ -50,9 +50,9 @@ public class ConversationController {
 	public ResponseEntity<StreamingResponseBody> processPromptStream(@RequestBody PromptRequest request, Principal principal) {
 		try {
 			String username = principal.getName();
-			UUID userId = accountService.getUserIdByUsername(username);
+			UUID accountId = accountService.getAccountIdByUsername(username);
 
-			StreamingResponseBody responseBody = conversationService.processPromptStream(userId, request);
+			StreamingResponseBody responseBody = conversationService.processPromptStream(accountId, request);
 
 			return ResponseEntity.status(HttpStatus.OK)
 					.contentType(MediaType.TEXT_PLAIN)

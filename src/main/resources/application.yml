@@ -28,3 +28,6 @@ openai:
     key: ${OPENAI_API_KEY}
   model:
     name: "gpt-4o-mini"
+
+cloudinary:
+  api_url: ${CLOUDINARY_URL}

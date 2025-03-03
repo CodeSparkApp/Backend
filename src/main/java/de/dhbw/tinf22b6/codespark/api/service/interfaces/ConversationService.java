@@ -7,6 +7,6 @@ import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBo
 import java.util.UUID;
 
 public interface ConversationService {
-	String processPrompt(UUID userId, PromptRequest request) throws UserNotFoundException;
-	StreamingResponseBody processPromptStream(UUID userId, PromptRequest request) throws UserNotFoundException;
+	String processPrompt(UUID accountId, PromptRequest request) throws UserNotFoundException;
+	StreamingResponseBody processPromptStream(UUID accountId, PromptRequest request) throws UserNotFoundException;
 }

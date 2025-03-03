@@ -27,6 +27,9 @@ public class Account {
 	@Enumerated(EnumType.STRING)
 	private UserRoleType role;
 
+	@Column(length = 512)
+	private String profileImageUrl;
+
 	@Column(nullable = false)
 	private boolean verified;
 
