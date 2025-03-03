@@ -1,17 +1,17 @@
 package de.dhbw.tinf22b6.codespark.api.service;
 
+import com.cloudinary.Cloudinary;
+import com.cloudinary.utils.ObjectUtils;
 import de.dhbw.tinf22b6.codespark.api.common.UserRoleType;
 import de.dhbw.tinf22b6.codespark.api.common.VerificationTokenType;
-import de.dhbw.tinf22b6.codespark.api.exception.AccountAlreadyExistsException;
-import de.dhbw.tinf22b6.codespark.api.exception.InvalidAccountCredentialsException;
-import de.dhbw.tinf22b6.codespark.api.exception.InvalidVerificationTokenException;
-import de.dhbw.tinf22b6.codespark.api.exception.UnverifiedAccountException;
+import de.dhbw.tinf22b6.codespark.api.exception.*;
 import de.dhbw.tinf22b6.codespark.api.model.Account;
 import de.dhbw.tinf22b6.codespark.api.model.VerificationToken;
 import de.dhbw.tinf22b6.codespark.api.payload.request.AccountCreateRequest;
 import de.dhbw.tinf22b6.codespark.api.payload.request.LoginRequest;
 import de.dhbw.tinf22b6.codespark.api.payload.request.PasswordResetRequest;
 import de.dhbw.tinf22b6.codespark.api.payload.response.TokenResponse;
+import de.dhbw.tinf22b6.codespark.api.payload.response.UploadImageResponse;
 import de.dhbw.tinf22b6.codespark.api.repository.AccountRepository;
 import de.dhbw.tinf22b6.codespark.api.repository.VerificationTokenRepository;
 import de.dhbw.tinf22b6.codespark.api.security.JwtUtil;
@@ -21,8 +21,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.time.Instant;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -33,17 +36,20 @@ public class AccountServiceImpl implements AccountService {
 	private final EmailService emailService;
 	private final PasswordEncoder passwordEncoder;
 	private final JwtUtil jwtUtil;
+	private final Cloudinary cloudinary;
 
 	public AccountServiceImpl(@Autowired AccountRepository accountRepository,
 							  @Autowired VerificationTokenRepository verificationTokenRepository,
 							  @Autowired EmailService emailService,
 							  @Autowired PasswordEncoder passwordEncoder,
-							  @Autowired JwtUtil jwtUtil) {
+							  @Autowired JwtUtil jwtUtil,
+							  @Autowired Cloudinary cloudinary) {
 		this.accountRepository = accountRepository;
 		this.verificationTokenRepository = verificationTokenRepository;
 		this.emailService = emailService;
 		this.passwordEncoder = passwordEncoder;
 		this.jwtUtil = jwtUtil;
+		this.cloudinary = cloudinary;
 	}
 
 	@Override
@@ -151,9 +157,29 @@ public class AccountServiceImpl implements AccountService {
 	}
 
 	@Override
-	public UUID getUserIdByUsername(String username) throws UsernameNotFoundException {
+	public UUID getAccountIdByUsername(String username) throws UsernameNotFoundException {
 		return accountRepository.findByUsername(username)
 				.orElseThrow(() -> new UsernameNotFoundException(String.format("User '%s' not found", username)))
 				.getId();
+	}
+
+	@Override
+	public UploadImageResponse updateProfileImage(UUID accountId, MultipartFile file) throws UserNotFoundException, IOException {
+		Optional<Account> optionalAccount = accountRepository.findById(accountId);
+		if (optionalAccount.isEmpty()) {
+			throw new UserNotFoundException("Account not found");
+		}
+
+		Account account = optionalAccount.get();
+
+		// Upload file to Cloudinary
+		Map<?, ?> uploadResult = cloudinary.uploader().upload(file.getBytes(), ObjectUtils.emptyMap());
+		String imageUrl = uploadResult.get("secure_url").toString();
+
+		// Update account with new profile image URL
+		account.setProfileImageUrl(imageUrl);
+		accountRepository.save(account);
+
+		return new UploadImageResponse(imageUrl);
 	}
 }
