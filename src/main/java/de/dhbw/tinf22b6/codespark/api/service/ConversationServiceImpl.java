@@ -30,20 +30,16 @@ import java.util.stream.Stream;
 
 @Service
 public class ConversationServiceImpl implements ConversationService {
-	private final SimpleOpenAI openAI;
+	private final SimpleOpenAI simpleOpenAI;
 	private final Environment env;
 	private final AccountRepository accountRepository;
 	private final ConversationRepository conversationRepository;
 
-	public ConversationServiceImpl(@Autowired Environment env,
+	public ConversationServiceImpl(@Autowired SimpleOpenAI simpleOpenAI,
+								   @Autowired Environment env,
 								   @Autowired AccountRepository accountRepository,
 								   @Autowired ConversationRepository conversationRepository) {
-		this.openAI = SimpleOpenAI.builder()
-				.apiKey(env.getRequiredProperty("openai.api.key"))
-				.organizationId(env.getRequiredProperty("openai.api.organization_id"))
-				.projectId(env.getRequiredProperty("openai.api.project_id"))
-				.build();
-
+		this.simpleOpenAI = simpleOpenAI;
 		this.env = env;
 		this.accountRepository = accountRepository;
 		this.conversationRepository = conversationRepository;
@@ -51,8 +47,8 @@ public class ConversationServiceImpl implements ConversationService {
 
 	@Override
 	@Transactional
-	public String processPrompt(UUID userId, PromptRequest request) throws UserNotFoundException {
-		Conversation conversation =  getOrCreateConversation(userId);
+	public String processPrompt(UUID accountId, PromptRequest request) throws UserNotFoundException {
+		Conversation conversation =  getOrCreateConversation(accountId);
 		List<ChatMessage> chatHistory = parseConversation(conversation);
 		chatHistory.add(ChatMessage.UserMessage.of(request.getPrompt()));
 
@@ -63,7 +59,7 @@ public class ConversationServiceImpl implements ConversationService {
 				.messages(chatHistory)
 				.build();
 
-		CompletableFuture<Chat> futureChat = openAI.chatCompletions().create(chatRequest);
+		CompletableFuture<Chat> futureChat = simpleOpenAI.chatCompletions().create(chatRequest);
 		Chat chatResponse = futureChat.join();
 		String response = chatResponse.firstContent();
 
@@ -77,8 +73,8 @@ public class ConversationServiceImpl implements ConversationService {
 
 	@Override
 	@Transactional
-	public StreamingResponseBody processPromptStream(UUID userId, PromptRequest request) throws UserNotFoundException {
-		Conversation conversation =  getOrCreateConversation(userId);
+	public StreamingResponseBody processPromptStream(UUID accountId, PromptRequest request) throws UserNotFoundException {
+		Conversation conversation =  getOrCreateConversation(accountId);
 		List<ChatMessage> chatHistory = parseConversation(conversation);
 		chatHistory.add(ChatMessage.UserMessage.of(request.getPrompt()));
 
@@ -94,7 +90,7 @@ public class ConversationServiceImpl implements ConversationService {
 				.build();
 
 		return outputStream -> {
-			try (Stream<Chat> stream = openAI.chatCompletions().createStream(chatRequest).join()) {
+			try (Stream<Chat> stream = simpleOpenAI.chatCompletions().createStream(chatRequest).join()) {
 				// Save assistant response
 				StringBuilder response = new StringBuilder();
 
