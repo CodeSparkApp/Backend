@@ -1,6 +1,8 @@
 package de.dhbw.tinf22b6.codespark.api.service;
 
 import de.dhbw.tinf22b6.codespark.api.common.MessageSenderType;
+import de.dhbw.tinf22b6.codespark.api.exception.ChatStreamingException;
+import de.dhbw.tinf22b6.codespark.api.exception.StreamWritingException;
 import de.dhbw.tinf22b6.codespark.api.exception.UserNotFoundException;
 import de.dhbw.tinf22b6.codespark.api.model.Account;
 import de.dhbw.tinf22b6.codespark.api.model.Conversation;
@@ -20,7 +22,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import java.io.IOException;
-import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.UUID;
@@ -47,7 +48,7 @@ public class ConversationServiceImpl implements ConversationService {
 
 	@Override
 	@Transactional
-	public String processPrompt(UUID accountId, PromptRequest request) throws UserNotFoundException {
+	public String processPrompt(UUID accountId, PromptRequest request) {
 		Conversation conversation =  getOrCreateConversation(accountId);
 		List<ChatMessage> chatHistory = parseConversation(conversation);
 		chatHistory.add(ChatMessage.UserMessage.of(request.getPrompt()));
@@ -73,7 +74,7 @@ public class ConversationServiceImpl implements ConversationService {
 
 	@Override
 	@Transactional
-	public StreamingResponseBody processPromptStream(UUID accountId, PromptRequest request) throws UserNotFoundException {
+	public StreamingResponseBody processPromptStream(UUID accountId, PromptRequest request) {
 		Conversation conversation =  getOrCreateConversation(accountId);
 		List<ChatMessage> chatHistory = parseConversation(conversation);
 		chatHistory.add(ChatMessage.UserMessage.of(request.getPrompt()));
@@ -90,7 +91,7 @@ public class ConversationServiceImpl implements ConversationService {
 				.build();
 
 		return outputStream -> {
-			try (Stream<Chat> stream = simpleOpenAI.chatCompletions().createStream(chatRequest).join()) {
+			try (outputStream; Stream<Chat> stream = simpleOpenAI.chatCompletions().createStream(chatRequest).join()) {
 				// Save assistant response
 				StringBuilder response = new StringBuilder();
 
@@ -109,7 +110,7 @@ public class ConversationServiceImpl implements ConversationService {
 							// Append chunk to assistant response
 							response.append(messageChunk);
 						} catch (IOException e) {
-							throw new UncheckedIOException("Error writing to output stream", e);
+							throw new StreamWritingException("An error occurred while writing to the output stream");
 						}
 					}
 				});
@@ -120,17 +121,14 @@ public class ConversationServiceImpl implements ConversationService {
 					conversationRepository.save(conversation);
 				}
 			} catch (Exception e) {
-				throw new RuntimeException("Error processing streaming response", e);
-			} finally {
-				outputStream.flush();
-				outputStream.close();
+				throw new ChatStreamingException("An error occurred while processing the streaming response");
 			}
 		};
 	}
 
-	private Conversation getOrCreateConversation(UUID userId) throws UserNotFoundException {
+	private Conversation getOrCreateConversation(UUID userId) {
 		Account account = accountRepository.findById(userId)
-				.orElseThrow(UserNotFoundException::new);
+				.orElseThrow(() -> new UserNotFoundException("No account was found with the provided information"));
 
 		return conversationRepository.findByAccount(account)
 				.orElseGet(() -> new Conversation(account));
