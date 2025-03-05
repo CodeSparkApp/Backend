@@ -1,12 +1,9 @@
 package de.dhbw.tinf22b6.codespark.api.controller;
 
-import de.dhbw.tinf22b6.codespark.api.exception.UserNotFoundException;
 import de.dhbw.tinf22b6.codespark.api.payload.request.PromptRequest;
 import de.dhbw.tinf22b6.codespark.api.service.interfaces.AccountService;
 import de.dhbw.tinf22b6.codespark.api.service.interfaces.ConversationService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -30,36 +27,22 @@ public class ConversationController {
 	}
 
 	@PostMapping("/prompt")
-	public ResponseEntity<?> processPrompt(@RequestBody PromptRequest request, Principal principal) {
-		try {
-			String username = principal.getName();
-			UUID accountId = accountService.getAccountIdByUsername(username);
+	public ResponseEntity<String> processPrompt(@RequestBody PromptRequest request, Principal principal) {
+		String username = principal.getName();
+		UUID accountId = accountService.getAccountIdByUsername(username);
 
-			String response = conversationService.processPrompt(accountId, request);
+		String response = conversationService.processPrompt(accountId, request);
 
-			return ResponseEntity.status(HttpStatus.OK)
-					.contentType(MediaType.TEXT_PLAIN)
-					.body(response);
-		} catch (UserNotFoundException e) {
-			return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-					.body(null);
-		}
+		return ResponseEntity.ok().body(response);
 	}
 
 	@PostMapping(value = "/prompt-stream")
 	public ResponseEntity<StreamingResponseBody> processPromptStream(@RequestBody PromptRequest request, Principal principal) {
-		try {
-			String username = principal.getName();
-			UUID accountId = accountService.getAccountIdByUsername(username);
+		String username = principal.getName();
+		UUID accountId = accountService.getAccountIdByUsername(username);
 
-			StreamingResponseBody responseBody = conversationService.processPromptStream(accountId, request);
+		StreamingResponseBody response = conversationService.processPromptStream(accountId, request);
 
-			return ResponseEntity.status(HttpStatus.OK)
-					.contentType(MediaType.TEXT_PLAIN)
-					.body(responseBody);
-		} catch (UserNotFoundException e) {
-			return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-					.body(null);
-		}
+		return ResponseEntity.ok().body(response);
 	}
 }
