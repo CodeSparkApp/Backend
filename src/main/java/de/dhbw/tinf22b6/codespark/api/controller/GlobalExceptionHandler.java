@@ -73,11 +73,31 @@ public class GlobalExceptionHandler {
 		);
 	}
 
+	@ExceptionHandler(MalformedTaskException.class)
+	public ResponseEntity<ApiErrorResponse> handleMalformedTaskException(MalformedTaskException e, WebRequest request) {
+		return createApiErrorResponse(
+				"Malformed Task",
+				HttpStatus.NOT_FOUND,
+				e.getMessage(),
+				request.getDescription(false)
+		);
+	}
+
 	@ExceptionHandler(StreamWritingException.class)
 	public ResponseEntity<ApiErrorResponse> handleStreamWritingException(StreamWritingException e, WebRequest request) {
 		return createApiErrorResponse(
 				"Stream Writing Error",
 				HttpStatus.INTERNAL_SERVER_ERROR,
+				e.getMessage(),
+				request.getDescription(false)
+		);
+	}
+
+	@ExceptionHandler(TaskNotFoundException.class)
+	public ResponseEntity<ApiErrorResponse> handleTaskNotFoundException(TaskNotFoundException e, WebRequest request) {
+		return createApiErrorResponse(
+				"Task Not Found",
+				HttpStatus.NOT_FOUND,
 				e.getMessage(),
 				request.getDescription(false)
 		);
