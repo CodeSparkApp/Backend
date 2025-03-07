@@ -2,6 +2,7 @@ package de.dhbw.tinf22b6.codespark.api.model;
 
 import jakarta.persistence.*;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.util.ArrayList;
@@ -10,6 +11,7 @@ import java.util.UUID;
 
 @Getter
 @Setter
+@NoArgsConstructor
 @Entity
 public class Conversation {
 	@Id
@@ -23,8 +25,6 @@ public class Conversation {
 	@OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
 	@JoinColumn(name = "conversation_id")
 	private final List<ConversationMessage> messages = new ArrayList<>();
-
-	public Conversation() {}
 
 	public Conversation(Account account) {
 		this.account = account;

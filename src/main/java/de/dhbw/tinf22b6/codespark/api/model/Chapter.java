@@ -2,6 +2,7 @@ package de.dhbw.tinf22b6.codespark.api.model;
 
 import jakarta.persistence.*;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.util.ArrayList;
@@ -10,6 +11,7 @@ import java.util.UUID;
 
 @Getter
 @Setter
+@NoArgsConstructor
 @Entity
 public class Chapter {
 	@Id
@@ -25,4 +27,9 @@ public class Chapter {
 	@OneToMany(cascade = CascadeType.ALL)
 	@JoinColumn(name = "chapter_id")
 	private final List<Task> tasks = new ArrayList<>();
+
+	public Chapter(String title, int orderIndex) {
+		this.title = title;
+		this.orderIndex = orderIndex;
+	}
 }

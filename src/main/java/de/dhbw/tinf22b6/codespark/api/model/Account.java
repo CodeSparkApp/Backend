@@ -3,12 +3,14 @@ package de.dhbw.tinf22b6.codespark.api.model;
 import de.dhbw.tinf22b6.codespark.api.common.UserRoleType;
 import jakarta.persistence.*;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.util.UUID;
 
 @Getter
 @Setter
+@NoArgsConstructor
 @Entity
 public class Account {
 	@Id
@@ -32,8 +34,6 @@ public class Account {
 
 	@Column(nullable = false)
 	private boolean verified;
-
-	public Account() {}
 
 	public Account(String username, String email, String password, UserRoleType role, boolean verified) {
 		this.username = username;
