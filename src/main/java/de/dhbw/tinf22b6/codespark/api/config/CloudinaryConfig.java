@@ -16,6 +16,6 @@ public class CloudinaryConfig {
 
 	@Bean
 	public Cloudinary cloudinary() {
-		return new Cloudinary(env.getRequiredProperty("cloudinary.api_url"));
+		return new Cloudinary(env.getRequiredProperty("cloudinary.api-url"));
 	}
 }

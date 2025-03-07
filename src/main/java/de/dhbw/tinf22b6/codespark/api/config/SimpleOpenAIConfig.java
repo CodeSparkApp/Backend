@@ -18,8 +18,8 @@ public class SimpleOpenAIConfig {
 	public SimpleOpenAI simpleOpenAI() {
 		return SimpleOpenAI.builder()
 				.apiKey(env.getRequiredProperty("openai.api.key"))
-				.organizationId(env.getRequiredProperty("openai.api.organization_id"))
-				.projectId(env.getRequiredProperty("openai.api.project_id"))
+				.organizationId(env.getRequiredProperty("openai.api.organization-id"))
+				.projectId(env.getRequiredProperty("openai.api.project-id"))
 				.build();
 	}
 }

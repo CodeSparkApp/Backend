@@ -26,7 +26,7 @@ public class JwtUtil {
 				.subject(username)
 				.claim("role", role)
 				.issuedAt(new Date())
-				.expiration(new Date(System.currentTimeMillis() + env.getRequiredProperty("auth.jwt.access_token_expiration", Long.class)))
+				.expiration(new Date(System.currentTimeMillis() + env.getRequiredProperty("auth.jwt.access-token-expiration", Long.class)))
 				.signWith(key)
 				.compact();
 	}
@@ -35,7 +35,7 @@ public class JwtUtil {
 		return Jwts.builder()
 				.subject(username)
 				.issuedAt(new Date())
-				.expiration(new Date(System.currentTimeMillis() + env.getRequiredProperty("auth.jwt.refresh_token_expiration", Long.class)))
+				.expiration(new Date(System.currentTimeMillis() + env.getRequiredProperty("auth.jwt.refresh-token-expiration", Long.class)))
 				.signWith(key)
 				.compact();
 	}
