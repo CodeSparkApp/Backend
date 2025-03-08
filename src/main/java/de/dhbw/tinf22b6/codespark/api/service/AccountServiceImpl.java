@@ -12,6 +12,7 @@ import de.dhbw.tinf22b6.codespark.api.model.Account;
 import de.dhbw.tinf22b6.codespark.api.model.VerificationToken;
 import de.dhbw.tinf22b6.codespark.api.payload.request.AccountCreateRequest;
 import de.dhbw.tinf22b6.codespark.api.payload.request.PasswordResetRequest;
+import de.dhbw.tinf22b6.codespark.api.payload.request.RequestPasswordResetRequest;
 import de.dhbw.tinf22b6.codespark.api.payload.response.UploadImageResponse;
 import de.dhbw.tinf22b6.codespark.api.repository.AccountRepository;
 import de.dhbw.tinf22b6.codespark.api.repository.VerificationTokenRepository;
@@ -99,8 +100,8 @@ public class AccountServiceImpl implements AccountService {
 	}
 
 	@Override
-	public void requestPasswordReset(String email) {
-		Optional<Account> optionalAccount = accountRepository.findByEmail(email);
+	public void requestPasswordReset(RequestPasswordResetRequest request) {
+		Optional<Account> optionalAccount = accountRepository.findByEmail(request.getEmail());
 		if (optionalAccount.isEmpty()) {
 			// Don't notify client that account with this email exists
 			return;
@@ -112,7 +113,7 @@ public class AccountServiceImpl implements AccountService {
 		VerificationToken verificationToken = new VerificationToken(token, account, VerificationTokenType.PASSWORD_RESET, expiryDate);
 		verificationTokenRepository.save(verificationToken);
 
-		emailService.sendPasswordResetEmail(email, token);
+		emailService.sendPasswordResetEmail(request.getEmail(), token);
 	}
 
 	@Override

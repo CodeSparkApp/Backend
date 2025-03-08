@@ -2,6 +2,7 @@ package de.dhbw.tinf22b6.codespark.api.controller;
 
 import de.dhbw.tinf22b6.codespark.api.payload.request.AccountCreateRequest;
 import de.dhbw.tinf22b6.codespark.api.payload.request.PasswordResetRequest;
+import de.dhbw.tinf22b6.codespark.api.payload.request.RequestPasswordResetRequest;
 import de.dhbw.tinf22b6.codespark.api.payload.response.UploadImageResponse;
 import de.dhbw.tinf22b6.codespark.api.service.interfaces.AccountService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,8 +37,8 @@ public class AccountController {
 	}
 
 	@PostMapping("/request-reset")
-	public ResponseEntity<Void> requestPasswordReset(@RequestBody String email) {
-		accountService.requestPasswordReset(email);
+	public ResponseEntity<Void> requestPasswordReset(@RequestBody RequestPasswordResetRequest request) {
+		accountService.requestPasswordReset(request);
 		return ResponseEntity.ok().build();
 	}
 
