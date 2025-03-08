@@ -18,12 +18,11 @@ public class Conversation {
 	@GeneratedValue(strategy = GenerationType.UUID)
 	private UUID id;
 
-	@ManyToOne
-	@JoinColumn(nullable = false)
+	@OneToOne(fetch = FetchType.LAZY)
+	@JoinColumn(nullable = false, unique = true)
 	private Account account;
 
-	@OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
-	@JoinColumn(name = "conversation_id")
+	@OneToMany(mappedBy = "conversation", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
 	private final List<ConversationMessage> messages = new ArrayList<>();
 
 	public Conversation(Account account) {
@@ -31,6 +30,7 @@ public class Conversation {
 	}
 
 	public void addMessage(ConversationMessage message) {
+		message.setConversation(this);
 		this.messages.add(message);
 	}
 }

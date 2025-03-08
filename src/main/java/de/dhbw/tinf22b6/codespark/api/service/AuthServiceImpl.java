@@ -14,8 +14,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.util.Optional;
-
 @Service
 public class AuthServiceImpl implements AuthService {
 	private final AccountRepository accountRepository;
@@ -32,14 +30,14 @@ public class AuthServiceImpl implements AuthService {
 
 	@Override
 	public TokenResponse loginAccount(LoginRequest request) {
-		Optional<Account> optionalAccount = accountRepository.findByUsername(request.getUsernameOrEmail())
-				.or(() -> accountRepository.findByEmail(request.getUsernameOrEmail()));
+		Account account = accountRepository.findByUsername(request.getUsernameOrEmail())
+				.or(() -> accountRepository.findByEmail(request.getUsernameOrEmail()))
+				.orElseThrow(() -> new InvalidAccountCredentialsException("Invalid username or password"));
 
-		if ((optionalAccount.isEmpty()) || (!passwordEncoder.matches(request.getPassword(), optionalAccount.get().getPassword()))) {
+		if (!passwordEncoder.matches(request.getPassword(), account.getPassword())) {
 			throw new InvalidAccountCredentialsException("Invalid username or password");
 		}
 
-		Account account = optionalAccount.get();
 		if (!account.isVerified()) {
 			throw new UnverifiedAccountException("The current account is not verified");
 		}

@@ -117,14 +117,10 @@ public class AccountServiceImpl implements AccountService {
 
 	@Override
 	public void resetPassword(PasswordResetRequest request) {
-		Optional<VerificationToken> optionalToken =
-				verificationTokenRepository.findByTokenAndType(request.getVerificationToken(), VerificationTokenType.PASSWORD_RESET);
+		VerificationToken verificationToken =
+				verificationTokenRepository.findByTokenAndType(request.getVerificationToken(), VerificationTokenType.PASSWORD_RESET)
+						.orElseThrow(() -> new InvalidVerificationTokenException("The verification link is invalid or has expired"));
 
-		if (optionalToken.isEmpty()) {
-			throw new InvalidVerificationTokenException("The verification link is invalid or has expired");
-		}
-
-		VerificationToken verificationToken = optionalToken.get();
 		if (verificationToken.isExpired()) {
 			// TODO
 			return;

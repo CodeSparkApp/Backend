@@ -21,15 +21,14 @@ public class Chapter {
 	@Column(nullable = false)
 	private String title;
 
-	@Column(nullable = false, unique = true)
-	private int orderIndex;
+	@Column(columnDefinition = "TEXT", nullable = false)
+	private String description;
 
-	@OneToMany(cascade = CascadeType.ALL)
-	@JoinColumn(name = "chapter_id")
+	@OneToMany(mappedBy = "chapter", cascade = CascadeType.PERSIST, fetch = FetchType.LAZY)
 	private final List<Task> tasks = new ArrayList<>();
 
-	public Chapter(String title, int orderIndex) {
+	public Chapter(String title, String description) {
 		this.title = title;
-		this.orderIndex = orderIndex;
+		this.description = description;
 	}
 }

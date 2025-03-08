@@ -26,17 +26,22 @@ public class Task {
 	@Column(nullable = false)
 	private String title;
 
-	@Column(nullable = false)
+	@Column(columnDefinition = "TEXT", nullable = false)
 	private String description;
 
 	@JdbcTypeCode(SqlTypes.JSON)
 	@Column(columnDefinition = "jsonb", nullable = false)
-	private String content;
+	private String data;
 
-	public Task(TaskType type, String title, String description, String content) {
+	@ManyToOne
+	@JoinColumn(name = "chapter_id")
+	private Chapter chapter;
+
+	public Task(TaskType type, String title, String description, String data, Chapter chapter) {
 		this.type = type;
 		this.title = title;
 		this.description = description;
-		this.content = content;
+		this.data = data;
+		this.chapter = chapter;
 	}
 }

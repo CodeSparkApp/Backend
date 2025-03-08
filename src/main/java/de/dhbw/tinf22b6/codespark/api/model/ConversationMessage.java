@@ -23,6 +23,10 @@ public class ConversationMessage {
 	@Column(columnDefinition = "TEXT")
 	private String message;
 
+	@ManyToOne
+	@JoinColumn(name = "conversation_id", nullable = false)
+	private Conversation conversation;
+
 	public ConversationMessage(MessageSenderType senderType, String message) {
 		this.senderType = senderType;
 		this.message = message;

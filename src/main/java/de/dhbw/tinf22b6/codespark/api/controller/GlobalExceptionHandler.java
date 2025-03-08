@@ -23,6 +23,16 @@ public class GlobalExceptionHandler {
 		);
 	}
 
+	@ExceptionHandler(ChapterNotFoundException.class)
+	public ResponseEntity<ApiErrorResponse> handleChapterNotFoundException(ChapterNotFoundException e, WebRequest request) {
+		return createApiErrorResponse(
+				"Chapter Not Found",
+				HttpStatus.NOT_FOUND,
+				e.getMessage(),
+				request.getDescription(false)
+		);
+	}
+
 	@ExceptionHandler(ChatStreamingException.class)
 	public ResponseEntity<ApiErrorResponse> handleChatStreamingException(ChatStreamingException e, WebRequest request) {
 		return createApiErrorResponse(
