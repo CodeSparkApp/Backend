@@ -20,7 +20,7 @@ public class EmailServiceImpl implements EmailService {
 
 	@Override
 	public void sendVerificationEmail(String to, String token) {
-		String verificationLink = "http://localhost:8080/api/v1/account/verify?token=" + token;
+		String verificationLink = env.getRequiredProperty("app.base-url") + "/api/v1/account/verify?token=" + token;
 		String message = "Click the link to verify your account: " + verificationLink;
 
 		SimpleMailMessage email = new SimpleMailMessage();
@@ -47,7 +47,7 @@ public class EmailServiceImpl implements EmailService {
 
 	@Override
 	public void sendPasswordResetEmail(String to, String token) {
-		String resetLink = "http://localhost:8080/api/v1/account/reset-password?token=" + token;
+		String resetLink = env.getRequiredProperty("app.base-url") + "/api/v1/account/reset-password?token=" + token;
 		String message = "Click here to reset your password: " + resetLink;
 
 		SimpleMailMessage email = new SimpleMailMessage();

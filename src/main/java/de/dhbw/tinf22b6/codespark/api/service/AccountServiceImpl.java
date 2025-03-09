@@ -12,12 +12,14 @@ import de.dhbw.tinf22b6.codespark.api.model.Account;
 import de.dhbw.tinf22b6.codespark.api.model.VerificationToken;
 import de.dhbw.tinf22b6.codespark.api.payload.request.AccountCreateRequest;
 import de.dhbw.tinf22b6.codespark.api.payload.request.PasswordResetRequest;
+import de.dhbw.tinf22b6.codespark.api.payload.request.RequestPasswordResetRequest;
 import de.dhbw.tinf22b6.codespark.api.payload.response.UploadImageResponse;
 import de.dhbw.tinf22b6.codespark.api.repository.AccountRepository;
 import de.dhbw.tinf22b6.codespark.api.repository.VerificationTokenRepository;
 import de.dhbw.tinf22b6.codespark.api.service.interfaces.AccountService;
 import de.dhbw.tinf22b6.codespark.api.service.interfaces.EmailService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.env.Environment;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -36,17 +38,20 @@ public class AccountServiceImpl implements AccountService {
 	private final EmailService emailService;
 	private final PasswordEncoder passwordEncoder;
 	private final Cloudinary cloudinary;
+	private final Environment env;
 
 	public AccountServiceImpl(@Autowired AccountRepository accountRepository,
 							  @Autowired VerificationTokenRepository verificationTokenRepository,
 							  @Autowired EmailService emailService,
 							  @Autowired PasswordEncoder passwordEncoder,
-							  @Autowired Cloudinary cloudinary) {
+							  @Autowired Cloudinary cloudinary,
+							  @Autowired Environment env) {
 		this.accountRepository = accountRepository;
 		this.verificationTokenRepository = verificationTokenRepository;
 		this.emailService = emailService;
 		this.passwordEncoder = passwordEncoder;
 		this.cloudinary = cloudinary;
+		this.env = env;
 	}
 
 	@Override
@@ -64,8 +69,9 @@ public class AccountServiceImpl implements AccountService {
 		accountRepository.save(account);
 
 		String token = UUID.randomUUID().toString();
-		Instant expiryDate = Instant.now().plusSeconds(86400); // 1 Day
-		verificationTokenRepository.save(new VerificationToken(token, account, VerificationTokenType.EMAIL_VERIFICATION, expiryDate));
+		Instant expiryDate = Instant.now().plusMillis(env.getRequiredProperty("auth.verification.email-token-expiration", Long.class));
+		VerificationToken verificationToken = new VerificationToken(token, account, VerificationTokenType.EMAIL_VERIFICATION, expiryDate);
+		verificationTokenRepository.save(verificationToken);
 
 		emailService.sendVerificationEmail(account.getEmail(), token);
 	}
@@ -94,8 +100,8 @@ public class AccountServiceImpl implements AccountService {
 	}
 
 	@Override
-	public void requestPasswordReset(String email) {
-		Optional<Account> optionalAccount = accountRepository.findByEmail(email);
+	public void requestPasswordReset(RequestPasswordResetRequest request) {
+		Optional<Account> optionalAccount = accountRepository.findByEmail(request.getEmail());
 		if (optionalAccount.isEmpty()) {
 			// Don't notify client that account with this email exists
 			return;
@@ -103,22 +109,19 @@ public class AccountServiceImpl implements AccountService {
 
 		Account account = optionalAccount.get();
 		String token = UUID.randomUUID().toString();
-		Instant expiryDate = Instant.now().plusSeconds(3600); // 1 Hour
-		verificationTokenRepository.save(new VerificationToken(token, account, VerificationTokenType.PASSWORD_RESET, expiryDate));
+		Instant expiryDate = Instant.now().plusSeconds(env.getRequiredProperty("auth.verification.password-token-expiration", Long.class));
+		VerificationToken verificationToken = new VerificationToken(token, account, VerificationTokenType.PASSWORD_RESET, expiryDate);
+		verificationTokenRepository.save(verificationToken);
 
-		emailService.sendPasswordResetEmail(email, token);
+		emailService.sendPasswordResetEmail(request.getEmail(), token);
 	}
 
 	@Override
 	public void resetPassword(PasswordResetRequest request) {
-		Optional<VerificationToken> optionalToken =
-				verificationTokenRepository.findByTokenAndType(request.getVerificationToken(), VerificationTokenType.PASSWORD_RESET);
+		VerificationToken verificationToken =
+				verificationTokenRepository.findByTokenAndType(request.getVerificationToken(), VerificationTokenType.PASSWORD_RESET)
+						.orElseThrow(() -> new InvalidVerificationTokenException("The verification link is invalid or has expired"));
 
-		if (optionalToken.isEmpty()) {
-			throw new InvalidVerificationTokenException("The verification link is invalid or has expired");
-		}
-
-		VerificationToken verificationToken = optionalToken.get();
 		if (verificationToken.isExpired()) {
 			// TODO
 			return;
@@ -143,7 +146,7 @@ public class AccountServiceImpl implements AccountService {
 	public UploadImageResponse updateProfileImage(UUID accountId, MultipartFile file) {
 		Optional<Account> optionalAccount = accountRepository.findById(accountId);
 		if (optionalAccount.isEmpty()) {
-			throw new UserNotFoundException("No account was found with the provided information");
+			throw new UserNotFoundException("No account was found for the provided ID");
 		}
 
 		Account account = optionalAccount.get();

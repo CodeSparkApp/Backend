@@ -3,6 +3,7 @@ package de.dhbw.tinf22b6.codespark.api.model;
 import de.dhbw.tinf22b6.codespark.api.common.VerificationTokenType;
 import jakarta.persistence.*;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.Instant;
@@ -10,6 +11,7 @@ import java.util.UUID;
 
 @Getter
 @Setter
+@NoArgsConstructor
 @Entity
 public class VerificationToken {
 	@Id
@@ -29,8 +31,6 @@ public class VerificationToken {
 
 	@Column(nullable = false)
 	private Instant expiryDate;
-
-	public VerificationToken() {}
 
 	public VerificationToken(String token, Account account, VerificationTokenType type, Instant expiryDate) {
 		this.token = token;

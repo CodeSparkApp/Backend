@@ -128,7 +128,7 @@ public class ConversationServiceImpl implements ConversationService {
 
 	private Conversation getOrCreateConversation(UUID userId) {
 		Account account = accountRepository.findById(userId)
-				.orElseThrow(() -> new UserNotFoundException("No account was found with the provided information"));
+				.orElseThrow(() -> new UserNotFoundException("No account was found for the provided ID"));
 
 		return conversationRepository.findByAccount(account)
 				.orElseGet(() -> new Conversation(account));

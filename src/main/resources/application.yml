@@ -9,11 +9,17 @@ spring:
     show-sql: false
     open-in-view: false
 
+app:
+  base-url: "http://localhost:8080"
+
 auth:
   jwt:
-    access_token_expiration: 900000 # 15 minutes
-    refresh_token_expiration: 86400000 # 24 hours
+    access-token-expiration: 900000 # 15 minutes
+    refresh-token-expiration: 86400000 # 24 hours
     secret: ${JWT_SECRET_KEY}
+  verification:
+    email-token-expiration: 86400000 # 24 hours
+    password-token-expiration: 3600000 # 1 hour
 
 smtp:
   host: "smtp.gmail.com"
@@ -23,11 +29,11 @@ smtp:
 
 openai:
   api:
-    organization_id: ${OPENAI_API_ORGANIZATION_ID}
-    project_id: ${OPENAI_API_PROJECT_ID}
+    organization-id: ${OPENAI_API_ORGANIZATION_ID}
+    project-id: ${OPENAI_API_PROJECT_ID}
     key: ${OPENAI_API_KEY}
   model:
     name: "gpt-4o-mini"
 
 cloudinary:
-  api_url: ${CLOUDINARY_URL}
+  api-url: ${CLOUDINARY_URL}
