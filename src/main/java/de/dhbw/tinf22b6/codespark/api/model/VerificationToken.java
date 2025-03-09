@@ -21,10 +21,6 @@ public class VerificationToken {
 	@Column(nullable = false, unique = true)
 	private String token;
 
-	@ManyToOne
-	@JoinColumn(nullable = false)
-	private Account account;
-
 	@Enumerated(EnumType.STRING)
 	@Column(nullable = false)
 	private VerificationTokenType type;
@@ -32,11 +28,15 @@ public class VerificationToken {
 	@Column(nullable = false)
 	private Instant expiryDate;
 
-	public VerificationToken(String token, Account account, VerificationTokenType type, Instant expiryDate) {
+	@ManyToOne
+	@JoinColumn(nullable = false)
+	private Account account;
+
+	public VerificationToken(String token, VerificationTokenType type, Instant expiryDate, Account account) {
 		this.token = token;
-		this.account = account;
 		this.type = type;
 		this.expiryDate = expiryDate;
+		this.account = account;
 	}
 
 	public boolean isExpired() {
