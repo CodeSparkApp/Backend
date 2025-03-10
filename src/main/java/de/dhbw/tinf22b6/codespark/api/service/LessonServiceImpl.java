@@ -70,6 +70,7 @@ public class LessonServiceImpl implements LessonService {
 	}
 
 	@Override
+	@Transactional
 	public void createLesson(LessonCreateRequest request) {
 		Chapter chapter = chapterRepository.findById(request.getChapterId())
 				.orElseThrow(() -> new ChapterNotFoundException("No chapter was found for the provided ID"));
@@ -96,54 +97,39 @@ public class LessonServiceImpl implements LessonService {
 
 		Lesson savedLesson = lessonRepository.save(lesson);
 
-		if (previousLesson != null) {
-			previousLesson.setNextLesson(savedLesson);
-			lessonRepository.save(previousLesson);
-		}
-
-		if (nextLesson != null) {
-			nextLesson.setPreviousLesson(savedLesson);
-			lessonRepository.save(nextLesson);
-		}
+		updateAdjacentLessons(previousLesson, nextLesson, savedLesson);
 	}
 
 	@Override
 	@Transactional
 	public void updateLesson(UUID id, LessonUpdateRequest request) {
 		Lesson lesson = lessonRepository.findById(id)
-				.orElseThrow(() -> new LessonNotFoundException(""));
+				.orElseThrow(() -> new LessonNotFoundException("Lesson not found for provided ID"));
 
-		if (request.getNextLessonId() != null) {
-			Lesson nextLesson = lessonRepository.findById(request.getNextLessonId()).orElse(null);
+		Lesson nextLesson = (request.getNextLessonId() != null)
+				? lessonRepository.findById(request.getNextLessonId()).orElse(null)
+				: null;
 
-			// If the lesson already has a next lesson, we need to update its reference
-			if (lesson.getNextLesson() != null) {
-				lesson.getNextLesson().setPreviousLesson(null);
-				lessonRepository.save(lesson.getNextLesson());
-			}
+		Lesson previousLesson = (request.getPreviousLessonId() != null)
+				? lessonRepository.findById(request.getPreviousLessonId()).orElse(null)
+				: null;
 
-			lesson.setNextLesson(nextLesson);
-			if (nextLesson != null) {
-				nextLesson.setPreviousLesson(lesson);
-				lessonRepository.save(nextLesson);
-			}
+		// Disconnect the old nextLesson reference if needed
+		if (lesson.getNextLesson() != null && !lesson.getNextLesson().equals(nextLesson)) {
+			lesson.getNextLesson().setPreviousLesson(null);
+			lessonRepository.save(lesson.getNextLesson());
 		}
 
-		if (request.getPreviousLessonId() != null) {
-			Lesson previousLesson = lessonRepository.findById(request.getPreviousLessonId()).orElse(null);
-
-			// If the lesson already has a previous lesson, update its reference
-			if (lesson.getPreviousLesson() != null) {
-				lesson.getPreviousLesson().setNextLesson(null);
-				lessonRepository.save(lesson.getPreviousLesson());
-			}
-
-			lesson.setPreviousLesson(previousLesson);
-			if (previousLesson != null) {
-				previousLesson.setNextLesson(lesson);
-				lessonRepository.save(previousLesson);
-			}
+		// Disconnect the old previousLesson reference if needed
+		if (lesson.getPreviousLesson() != null && !lesson.getPreviousLesson().equals(previousLesson)) {
+			lesson.getPreviousLesson().setNextLesson(null);
+			lessonRepository.save(lesson.getPreviousLesson());
 		}
+
+		lesson.setNextLesson(nextLesson);
+		lesson.setPreviousLesson(previousLesson);
+
+		updateAdjacentLessons(previousLesson, nextLesson, lesson);
 
 		lessonRepository.save(lesson);
 	}
@@ -154,5 +140,17 @@ public class LessonServiceImpl implements LessonService {
 				.orElseThrow(() -> new LessonNotFoundException("No lesson was found for the provided ID"));
 
 		lessonRepository.delete(lesson);
+	}
+
+	private void updateAdjacentLessons(Lesson previousLesson, Lesson nextLesson, Lesson currentLesson) {
+		if (previousLesson != null) {
+			previousLesson.setNextLesson(currentLesson);
+			lessonRepository.save(previousLesson);
+		}
+
+		if (nextLesson != null) {
+			nextLesson.setPreviousLesson(currentLesson);
+			lessonRepository.save(nextLesson);
+		}
 	}
 }

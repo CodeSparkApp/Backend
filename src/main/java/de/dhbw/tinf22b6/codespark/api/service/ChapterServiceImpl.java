@@ -13,6 +13,7 @@ import de.dhbw.tinf22b6.codespark.api.payload.response.LessonOverviewResponse;
 import de.dhbw.tinf22b6.codespark.api.repository.ChapterRepository;
 import de.dhbw.tinf22b6.codespark.api.repository.LessonRepository;
 import de.dhbw.tinf22b6.codespark.api.service.interfaces.ChapterService;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -87,12 +88,17 @@ public class ChapterServiceImpl implements ChapterService {
 	}
 
 	@Override
+	@Transactional
 	public void createChapter(ChapterCreateRequest request) {
-		Lesson firstLesson = lessonRepository.findById(request.getFirstLessonId())
-				.orElseThrow(() -> new LessonNotFoundException("No lesson was found for the provided ID"));
+		Lesson firstLesson = (request.getFirstLessonId() != null)
+				? lessonRepository.findById(request.getFirstLessonId())
+				.orElseThrow(() -> new LessonNotFoundException("No lesson was found for the provided ID"))
+				: null;
 
-		Chapter nextChapter = chapterRepository.findById(request.getNextChapterId())
-				.orElseThrow(() -> new ChapterNotFoundException("No chapter was found for the provided ID"));
+		Chapter nextChapter = (request.getNextChapterId() != null)
+				? chapterRepository.findById(request.getNextChapterId())
+				.orElseThrow(() -> new ChapterNotFoundException("No chapter was found for the provided ID"))
+				: null;
 
 		Chapter chapter = new Chapter(
 				request.getTitle(),
@@ -101,12 +107,34 @@ public class ChapterServiceImpl implements ChapterService {
 				nextChapter
 		);
 
-		chapterRepository.save(chapter);
+		Chapter savedChapter = chapterRepository.save(chapter);
+
+		updateNextChapterReference(nextChapter, savedChapter);
 	}
 
 	@Override
+	@Transactional
 	public void updateChapter(UUID id, ChapterUpdateRequest request) {
+		Chapter chapter = chapterRepository.findById(id)
+				.orElseThrow(() -> new ChapterNotFoundException("No chapter was found for the provided ID"));
 
+		// Retrieve the new nextChapter (can be null)
+		Chapter nextChapter = (request.getNextChapterId() != null)
+				? chapterRepository.findById(request.getNextChapterId()).orElse(null)
+				: null;
+
+		// Disconnect the old nextChapter if needed
+		if (chapter.getNextChapter() != null && !chapter.getNextChapter().equals(nextChapter)) {
+			Chapter oldNextChapter = chapter.getNextChapter();
+			oldNextChapter.setNextChapter(null);
+			chapterRepository.save(oldNextChapter);
+		}
+
+		chapter.setNextChapter(nextChapter);
+
+		updateNextChapterReference(nextChapter, chapter);
+
+		chapterRepository.save(chapter);
 	}
 
 	@Override
@@ -115,5 +143,16 @@ public class ChapterServiceImpl implements ChapterService {
 				.orElseThrow(() -> new ChapterNotFoundException("No chapter was found for the provided ID"));
 
 		chapterRepository.delete(chapter);
+	}
+
+	private void updateNextChapterReference(Chapter nextChapter, Chapter newChapter) {
+		if (nextChapter != null) {
+			Optional<Chapter> previousChapterOpt = chapterRepository.findByNextChapterId(nextChapter.getId());
+
+			previousChapterOpt.ifPresent(previousChapter -> {
+				previousChapter.setNextChapter(newChapter);
+				chapterRepository.save(previousChapter);
+			});
+		}
 	}
 }
