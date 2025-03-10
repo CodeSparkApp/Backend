@@ -3,6 +3,14 @@ spring:
     url: ${DATABASE_URL}
     username: ${DATABASE_USERNAME}
     password: ${DATABASE_PASSWORD}
+    # Disable prepared statements for SupaBase
+    hikari:
+      cache-prep-stmts: false
+      prep-stmt-cache-size: 0
+      prep-stmt-cache-sql-limit: 0
+      use-server-prep-stmts: false
+      use-local-session-state: true
+      use-local-transaction-state: true
   jpa:
     hibernate:
       ddl-auto: update

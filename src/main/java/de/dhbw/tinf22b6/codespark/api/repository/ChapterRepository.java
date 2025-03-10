@@ -25,6 +25,10 @@ public class ChapterRepository {
 		return chapterRepository.findById(id);
 	}
 
+	public Optional<Chapter> findByNextChapterId(UUID nextChapterId) {
+		return chapterRepository.findByNextChapterId(nextChapterId);
+	}
+
 	public Chapter save(Chapter chapter) {
 		return chapterRepository.save(chapter);
 	}
