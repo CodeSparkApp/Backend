@@ -1,6 +1,8 @@
-package de.dhbw.tinf22b6.codespark.api.payload.request;
+package de.dhbw.tinf22b6.codespark.api.payload.response;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.JsonNode;
+import de.dhbw.tinf22b6.codespark.api.common.LessonType;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -12,16 +14,20 @@ import java.util.UUID;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class ChapterCreateRequest {
+public class LessonResponse {
+	@JsonProperty("id")
+	private UUID id;
+
 	@JsonProperty("title")
 	private String title;
 
 	@JsonProperty("description")
 	private String description;
 
-	@JsonProperty("first_lesson_id")
-	private UUID firstLessonId;
+	@JsonProperty("type")
+	private LessonType type;
 
-	@JsonProperty("next_chapter_id")
-	private UUID nextChapterId;
+	@JsonProperty("data")
+	private JsonNode data;
 }
+
