@@ -1,7 +1,7 @@
 package de.dhbw.tinf22b6.codespark.api.payload.request;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import de.dhbw.tinf22b6.codespark.api.common.TaskType;
+import de.dhbw.tinf22b6.codespark.api.common.LessonType;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -13,19 +13,25 @@ import java.util.UUID;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class TaskCreateRequest {
-	@JsonProperty("type")
-	private TaskType type;
-
+public class LessonCreateRequest {
 	@JsonProperty("title")
 	private String title;
 
 	@JsonProperty("description")
 	private String description;
 
-	@JsonProperty("content")
-	private String content;
+	@JsonProperty("type")
+	private LessonType type;
+
+	@JsonProperty("data")
+	private String data;
 
 	@JsonProperty("chapter_id")
 	private UUID chapterId;
+
+	@JsonProperty("next_lesson_id")
+	private UUID nextLessonId;
+
+	@JsonProperty("next_previous_id")
+	private UUID previousLessonId;
 }

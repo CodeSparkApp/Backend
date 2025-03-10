@@ -70,7 +70,7 @@ public class AccountServiceImpl implements AccountService {
 
 		String token = UUID.randomUUID().toString();
 		Instant expiryDate = Instant.now().plusMillis(env.getRequiredProperty("auth.verification.email-token-expiration", Long.class));
-		VerificationToken verificationToken = new VerificationToken(token, account, VerificationTokenType.EMAIL_VERIFICATION, expiryDate);
+		VerificationToken verificationToken = new VerificationToken(token, VerificationTokenType.EMAIL_VERIFICATION, expiryDate, account);
 		verificationTokenRepository.save(verificationToken);
 
 		emailService.sendVerificationEmail(account.getEmail(), token);
@@ -110,7 +110,7 @@ public class AccountServiceImpl implements AccountService {
 		Account account = optionalAccount.get();
 		String token = UUID.randomUUID().toString();
 		Instant expiryDate = Instant.now().plusSeconds(env.getRequiredProperty("auth.verification.password-token-expiration", Long.class));
-		VerificationToken verificationToken = new VerificationToken(token, account, VerificationTokenType.PASSWORD_RESET, expiryDate);
+		VerificationToken verificationToken = new VerificationToken(token, VerificationTokenType.PASSWORD_RESET, expiryDate, account);
 		verificationTokenRepository.save(verificationToken);
 
 		emailService.sendPasswordResetEmail(request.getEmail(), token);

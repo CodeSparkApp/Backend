@@ -3,7 +3,6 @@ package de.dhbw.tinf22b6.codespark.api.controller;
 import de.dhbw.tinf22b6.codespark.api.exception.*;
 import de.dhbw.tinf22b6.codespark.api.payload.response.ApiErrorResponse;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -83,11 +82,21 @@ public class GlobalExceptionHandler {
 		);
 	}
 
-	@ExceptionHandler(MalformedTaskException.class)
-	public ResponseEntity<ApiErrorResponse> handleMalformedTaskException(MalformedTaskException e, WebRequest request) {
+	@ExceptionHandler(LessonNotFoundException.class)
+	public ResponseEntity<ApiErrorResponse> handleLessonNotFoundException(LessonNotFoundException e, WebRequest request) {
 		return createApiErrorResponse(
-				"Malformed Task",
+				"Lesson Not Found",
 				HttpStatus.NOT_FOUND,
+				e.getMessage(),
+				request.getDescription(false)
+		);
+	}
+
+	@ExceptionHandler(MalformedLessonDataException.class)
+	public ResponseEntity<ApiErrorResponse> handleMalformedLessonDataException(MalformedLessonDataException e, WebRequest request) {
+		return createApiErrorResponse(
+				"Malformed Lesson Data",
+				HttpStatus.INTERNAL_SERVER_ERROR,
 				e.getMessage(),
 				request.getDescription(false)
 		);
@@ -98,16 +107,6 @@ public class GlobalExceptionHandler {
 		return createApiErrorResponse(
 				"Stream Writing Error",
 				HttpStatus.INTERNAL_SERVER_ERROR,
-				e.getMessage(),
-				request.getDescription(false)
-		);
-	}
-
-	@ExceptionHandler(TaskNotFoundException.class)
-	public ResponseEntity<ApiErrorResponse> handleTaskNotFoundException(TaskNotFoundException e, WebRequest request) {
-		return createApiErrorResponse(
-				"Task Not Found",
-				HttpStatus.NOT_FOUND,
 				e.getMessage(),
 				request.getDescription(false)
 		);
@@ -141,9 +140,6 @@ public class GlobalExceptionHandler {
 				message,
 				path
 		);
-		return ResponseEntity
-				.status(httpStatus)
-				.contentType(MediaType.APPLICATION_JSON)
-				.body(response);
+		return ResponseEntity.status(httpStatus).body(response);
 	}
 }

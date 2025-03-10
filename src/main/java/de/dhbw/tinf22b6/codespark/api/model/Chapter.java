@@ -5,8 +5,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.UUID;
 
 @Getter
@@ -24,11 +22,18 @@ public class Chapter {
 	@Column(columnDefinition = "TEXT", nullable = false)
 	private String description;
 
-	@OneToMany(mappedBy = "chapter", cascade = CascadeType.PERSIST, fetch = FetchType.LAZY)
-	private final List<Task> tasks = new ArrayList<>();
+	@OneToOne
+	@JoinColumn(name = "first_lesson_id")
+	private Lesson firstLesson;
 
-	public Chapter(String title, String description) {
+	@OneToOne
+	@JoinColumn(name = "next_chapter_id")
+	private Chapter nextChapter;
+
+	public Chapter(String title, String description, Lesson firstLesson, Chapter nextChapter) {
 		this.title = title;
 		this.description = description;
+		this.firstLesson = firstLesson;
+		this.nextChapter = nextChapter;
 	}
 }

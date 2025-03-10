@@ -1,7 +1,9 @@
 package de.dhbw.tinf22b6.codespark.api.controller;
 
 import de.dhbw.tinf22b6.codespark.api.payload.request.ChapterCreateRequest;
-import de.dhbw.tinf22b6.codespark.api.payload.response.StoryChaptersResponse;
+import de.dhbw.tinf22b6.codespark.api.payload.request.ChapterUpdateRequest;
+import de.dhbw.tinf22b6.codespark.api.payload.response.ChapterOverviewResponse;
+import de.dhbw.tinf22b6.codespark.api.payload.response.LessonOverviewResponse;
 import de.dhbw.tinf22b6.codespark.api.service.interfaces.ChapterService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -20,9 +22,15 @@ public class ChapterController {
 		this.chapterService = chapterService;
 	}
 
-	@GetMapping("/story")
-	public ResponseEntity<StoryChaptersResponse> getAllStoryChapters() {
-		StoryChaptersResponse response = chapterService.getAllStoryChapters();
+	@GetMapping("/overview")
+	public ResponseEntity<ChapterOverviewResponse> getChapterOverview() {
+		ChapterOverviewResponse response = chapterService.getChapterOverview();
+		return ResponseEntity.ok().body(response);
+	}
+
+	@GetMapping("/{chapterId}/lessons")
+	public ResponseEntity<LessonOverviewResponse> getLessonOverview(@PathVariable UUID chapterId) {
+		LessonOverviewResponse response = chapterService.getLessonOverview(chapterId);
 		return ResponseEntity.ok().body(response);
 	}
 
@@ -30,6 +38,13 @@ public class ChapterController {
 	@PreAuthorize("hasRole('ADMIN')")
 	public ResponseEntity<Void> createChapter(@RequestBody ChapterCreateRequest request) {
 		chapterService.createChapter(request);
+		return ResponseEntity.status(HttpStatus.CREATED).build();
+	}
+
+	@PatchMapping("/{id}")
+	@PreAuthorize("hasRole('ADMIN')")
+	public ResponseEntity<Void> updateChapter(@PathVariable UUID id, @RequestBody ChapterUpdateRequest request) {
+		chapterService.updateChapter(id, request);
 		return ResponseEntity.status(HttpStatus.CREATED).build();
 	}
 

@@ -12,16 +12,10 @@ import java.util.UUID;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class ChapterCreateRequest {
-	@JsonProperty("title")
-	private String title;
+public class LessonUpdateRequest {
+	@JsonProperty("next_lesson_id")
+	private UUID nextLessonId;
 
-	@JsonProperty("description")
-	private String description;
-
-	@JsonProperty("first_lesson_id")
-	private UUID firstLessonId;
-
-	@JsonProperty("next_chapter_id")
-	private UUID nextChapterId;
+	@JsonProperty("next_previous_id")
+	private UUID previousLessonId;
 }
