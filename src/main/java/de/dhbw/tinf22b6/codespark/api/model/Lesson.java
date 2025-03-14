@@ -5,8 +5,6 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.hibernate.annotations.JdbcTypeCode;
-import org.hibernate.type.SqlTypes;
 
 import java.util.UUID;
 
@@ -14,7 +12,8 @@ import java.util.UUID;
 @Setter
 @NoArgsConstructor
 @Entity
-public class Lesson {
+@Inheritance(strategy = InheritanceType.JOINED)
+public abstract class Lesson {
 	@Id
 	@GeneratedValue(strategy = GenerationType.UUID)
 	private UUID id;
@@ -25,31 +24,27 @@ public class Lesson {
 	@Column(columnDefinition = "TEXT", nullable = false)
 	private String description;
 
-	@Column(nullable = false)
+	@Column(nullable = false, insertable = false, updatable = false)
 	@Enumerated(EnumType.STRING)
 	private LessonType type;
 
-	@JdbcTypeCode(SqlTypes.JSON)
-	@Column(columnDefinition = "jsonb", nullable = false)
-	private String data;
-
-	@ManyToOne
+	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(nullable = false)
 	private Chapter chapter;
 
-	@OneToOne
+	@OneToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "next_lesson_id")
 	private Lesson nextLesson;
 
-	@OneToOne
+	@OneToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "previous_lesson_id")
 	private Lesson previousLesson;
 
-	public Lesson(String title, String description, LessonType type, String data, Chapter chapter, Lesson nextLesson, Lesson previousLesson) {
+	public Lesson(String title, String description, LessonType type, Chapter chapter,
+				  Lesson nextLesson, Lesson previousLesson) {
 		this.title = title;
 		this.description = description;
 		this.type = type;
-		this.data = data;
 		this.chapter = chapter;
 		this.nextLesson = nextLesson;
 		this.previousLesson = previousLesson;

@@ -2,7 +2,6 @@ package de.dhbw.tinf22b6.codespark.api.payload.response;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import de.dhbw.tinf22b6.codespark.api.common.LessonType;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -12,18 +11,13 @@ import java.util.UUID;
 @Getter
 @Setter
 @NoArgsConstructor
-@AllArgsConstructor
-public abstract class LessonResponse {
-	@JsonProperty("id")
-	private UUID id;
+public class TheoryLessonResponse extends LessonResponse {
+	@JsonProperty("text")
+	private String text;
 
-	@JsonProperty("title")
-	private String title;
-
-	@JsonProperty("description")
-	private String description;
-
-	@JsonProperty("type")
-	private LessonType type;
+	public TheoryLessonResponse(UUID id, String title, String description, LessonType type,
+								String text) {
+		super(id, title, description, type);
+		this.text = text;
+	}
 }
-

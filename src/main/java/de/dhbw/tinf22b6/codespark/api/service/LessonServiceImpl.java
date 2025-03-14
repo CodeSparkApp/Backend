@@ -1,18 +1,13 @@
 package de.dhbw.tinf22b6.codespark.api.service;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import de.dhbw.tinf22b6.codespark.api.exception.ChapterNotFoundException;
 import de.dhbw.tinf22b6.codespark.api.exception.LessonNotFoundException;
-import de.dhbw.tinf22b6.codespark.api.exception.MalformedLessonDataException;
-import de.dhbw.tinf22b6.codespark.api.model.Chapter;
-import de.dhbw.tinf22b6.codespark.api.model.Lesson;
+import de.dhbw.tinf22b6.codespark.api.exception.UnknownLessonTypeException;
+import de.dhbw.tinf22b6.codespark.api.model.*;
 import de.dhbw.tinf22b6.codespark.api.payload.request.LessonCreateRequest;
 import de.dhbw.tinf22b6.codespark.api.payload.request.LessonSubmitRequest;
 import de.dhbw.tinf22b6.codespark.api.payload.request.LessonUpdateRequest;
-import de.dhbw.tinf22b6.codespark.api.payload.response.LessonResponse;
-import de.dhbw.tinf22b6.codespark.api.payload.response.LessonSubmitResponse;
+import de.dhbw.tinf22b6.codespark.api.payload.response.*;
 import de.dhbw.tinf22b6.codespark.api.repository.ChapterRepository;
 import de.dhbw.tinf22b6.codespark.api.repository.LessonRepository;
 import de.dhbw.tinf22b6.codespark.api.service.interfaces.LessonEvaluationService;
@@ -28,7 +23,6 @@ public class LessonServiceImpl implements LessonService {
 	private final LessonRepository lessonRepository;
 	private final ChapterRepository chapterRepository;
 	private final LessonEvaluationService lessonEvaluationService;
-	private final ObjectMapper objectMapper = new ObjectMapper();
 
 	public LessonServiceImpl(@Autowired LessonRepository lessonRepository,
 							 @Autowired ChapterRepository chapterRepository,
@@ -43,20 +37,56 @@ public class LessonServiceImpl implements LessonService {
 		Lesson lesson = lessonRepository.findById(id)
 				.orElseThrow(() -> new LessonNotFoundException("No lesson was found for the provided ID"));
 
-		JsonNode contentNode;
-		try {
-			contentNode = objectMapper.readTree(lesson.getData());
-		} catch (JsonProcessingException e) {
-			throw new MalformedLessonDataException("The data of the lesson couldn't be parsed");
-		}
-
-		return new LessonResponse(
-				lesson.getId(),
-				lesson.getTitle(),
-				lesson.getDescription(),
-				lesson.getType(),
-				contentNode
-		);
+		return switch (lesson) {
+			case TheoryLesson theoryLesson -> new TheoryLessonResponse(
+					theoryLesson.getId(),
+					theoryLesson.getTitle(),
+					theoryLesson.getDescription(),
+					theoryLesson.getType(),
+					theoryLesson.getText()
+			);
+			case CodeAnalysisLesson codeAnalysisLesson -> new CodeAnalysisLessonResponse(
+					codeAnalysisLesson.getId(),
+					codeAnalysisLesson.getTitle(),
+					codeAnalysisLesson.getDescription(),
+					codeAnalysisLesson.getType(),
+					codeAnalysisLesson.getCode(),
+					codeAnalysisLesson.getQuestion()
+			);
+			case MultipleChoiceLesson multipleChoiceLesson -> new MultipleChoiceLessonResponse(
+					multipleChoiceLesson.getId(),
+					multipleChoiceLesson.getTitle(),
+					multipleChoiceLesson.getDescription(),
+					multipleChoiceLesson.getType(),
+					multipleChoiceLesson.getQuestion(),
+					multipleChoiceLesson.getOptions()
+			);
+			case FillBlanksLesson fillBlanksLesson -> new FillBlanksLessonResponse(
+					fillBlanksLesson.getId(),
+					fillBlanksLesson.getTitle(),
+					fillBlanksLesson.getDescription(),
+					fillBlanksLesson.getType(),
+					fillBlanksLesson.getTemplateCode(),
+					fillBlanksLesson.getExpectedOutput()
+			);
+			case DebuggingLesson debuggingLesson -> new DebuggingLessonResponse(
+					debuggingLesson.getId(),
+					debuggingLesson.getTitle(),
+					debuggingLesson.getDescription(),
+					debuggingLesson.getType(),
+					debuggingLesson.getFaultyCode(),
+					debuggingLesson.getExpectedOutput()
+			);
+			case ProgrammingLesson programmingLesson -> new ProgrammingLessonResponse(
+					programmingLesson.getId(),
+					programmingLesson.getTitle(),
+					programmingLesson.getDescription(),
+					programmingLesson.getType(),
+					programmingLesson.getProblem(),
+					programmingLesson.getCode()
+			);
+			default -> throw new UnknownLessonTypeException("Unexpected lesson type: " + lesson.getClass().getSimpleName());
+		};
 	}
 
 	@Override
@@ -85,20 +115,81 @@ public class LessonServiceImpl implements LessonService {
 				.orElseThrow(() -> new LessonNotFoundException("No lesson was found for the provided ID of the 'previous lesson'"))
 				: null;
 
-		Lesson lesson = new Lesson(
-				request.getTitle(),
-				request.getDescription(),
-				request.getType(),
-				request.getData(),
-				chapter,
-				nextLesson,
-				previousLesson
-		);
+		Lesson newLesson;
 
-		Lesson savedLesson = lessonRepository.save(lesson);
+		switch (request.getType()) {
+			case THEORY -> newLesson = new TheoryLesson(
+					request.getTitle(),
+					request.getDescription(),
+					request.getType(),
+					chapter,
+					nextLesson,
+					previousLesson,
+					request.getText()
+			);
+			case PROGRAMMING -> newLesson = new ProgrammingLesson(
+					request.getTitle(),
+					request.getDescription(),
+					request.getType(),
+					chapter,
+					nextLesson,
+					previousLesson,
+					request.getProblem(),
+					request.getCode(),
+					request.getSampleSolution()
+			);
+			case CODE_ANALYSIS -> newLesson = new CodeAnalysisLesson(
+					request.getTitle(),
+					request.getDescription(),
+					request.getType(),
+					chapter,
+					nextLesson,
+					previousLesson,
+					request.getCode(),
+					request.getQuestion(),
+					request.getSampleSolution()
+			);
+			case DEBUGGING -> newLesson = new DebuggingLesson(
+					request.getTitle(),
+					request.getDescription(),
+					request.getType(),
+					chapter,
+					nextLesson,
+					previousLesson,
+					request.getFaultyCode(),
+					request.getExpectedOutput(),
+					request.getSampleSolution()
+			);
+			case FILL_BLANKS -> newLesson = new FillBlanksLesson(
+					request.getTitle(),
+					request.getDescription(),
+					request.getType(),
+					chapter,
+					nextLesson,
+					previousLesson,
+					request.getTemplateCode(),
+					request.getExpectedOutput(),
+					request.getCorrectBlanks()
+			);
+			case MULTIPLE_CHOICE -> newLesson = new MultipleChoiceLesson(
+					request.getTitle(),
+					request.getDescription(),
+					request.getType(),
+					chapter,
+					nextLesson,
+					previousLesson,
+					request.getQuestion(),
+					request.getOptions(),
+					request.getCorrectOptions()
+			);
+			default -> throw new IllegalArgumentException("Invalid lesson type provided: " + request.getType());
+		}
+
+		Lesson savedLesson = lessonRepository.save(newLesson);
 
 		updateAdjacentLessons(previousLesson, nextLesson, savedLesson);
 	}
+
 
 	@Override
 	@Transactional
