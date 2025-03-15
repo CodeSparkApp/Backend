@@ -3,12 +3,10 @@ package de.dhbw.tinf22b6.codespark.api.service;
 import de.dhbw.tinf22b6.codespark.api.common.MessageSenderType;
 import de.dhbw.tinf22b6.codespark.api.exception.ChatStreamingException;
 import de.dhbw.tinf22b6.codespark.api.exception.StreamWritingException;
-import de.dhbw.tinf22b6.codespark.api.exception.UserNotFoundException;
 import de.dhbw.tinf22b6.codespark.api.model.Account;
 import de.dhbw.tinf22b6.codespark.api.model.Conversation;
 import de.dhbw.tinf22b6.codespark.api.model.ConversationMessage;
 import de.dhbw.tinf22b6.codespark.api.payload.request.PromptRequest;
-import de.dhbw.tinf22b6.codespark.api.repository.AccountRepository;
 import de.dhbw.tinf22b6.codespark.api.repository.ConversationRepository;
 import de.dhbw.tinf22b6.codespark.api.service.interfaces.ConversationService;
 import io.github.sashirestela.openai.SimpleOpenAI;
@@ -24,7 +22,6 @@ import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBo
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
-import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -33,23 +30,22 @@ import java.util.stream.Stream;
 public class ConversationServiceImpl implements ConversationService {
 	private final SimpleOpenAI simpleOpenAI;
 	private final Environment env;
-	private final AccountRepository accountRepository;
 	private final ConversationRepository conversationRepository;
 
 	public ConversationServiceImpl(@Autowired SimpleOpenAI simpleOpenAI,
 								   @Autowired Environment env,
-								   @Autowired AccountRepository accountRepository,
 								   @Autowired ConversationRepository conversationRepository) {
 		this.simpleOpenAI = simpleOpenAI;
 		this.env = env;
-		this.accountRepository = accountRepository;
 		this.conversationRepository = conversationRepository;
 	}
 
 	@Override
 	@Transactional
-	public String processPrompt(UUID accountId, PromptRequest request) {
-		Conversation conversation =  getOrCreateConversation(accountId);
+	public String processPrompt(Account account, PromptRequest request) {
+		Conversation conversation = conversationRepository.findByAccount(account)
+				.orElseGet(() -> new Conversation(account));
+
 		List<ChatMessage> chatHistory = parseConversation(conversation);
 		chatHistory.add(ChatMessage.UserMessage.of(request.getPrompt()));
 
@@ -74,8 +70,10 @@ public class ConversationServiceImpl implements ConversationService {
 
 	@Override
 	@Transactional
-	public StreamingResponseBody processPromptStream(UUID accountId, PromptRequest request) {
-		Conversation conversation =  getOrCreateConversation(accountId);
+	public StreamingResponseBody processPromptStream(Account account, PromptRequest request) {
+		Conversation conversation = conversationRepository.findByAccount(account)
+				.orElseGet(() -> new Conversation(account));
+
 		List<ChatMessage> chatHistory = parseConversation(conversation);
 		chatHistory.add(ChatMessage.UserMessage.of(request.getPrompt()));
 
@@ -124,14 +122,6 @@ public class ConversationServiceImpl implements ConversationService {
 				throw new ChatStreamingException("An error occurred while processing the streaming response");
 			}
 		};
-	}
-
-	private Conversation getOrCreateConversation(UUID userId) {
-		Account account = accountRepository.findById(userId)
-				.orElseThrow(() -> new UserNotFoundException("No account was found for the provided ID"));
-
-		return conversationRepository.findByAccount(account)
-				.orElseGet(() -> new Conversation(account));
 	}
 
 	private List<ChatMessage> parseConversation(Conversation conversation) {
