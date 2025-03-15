@@ -92,21 +92,21 @@ public class GlobalExceptionHandler {
 		);
 	}
 
-	@ExceptionHandler(MalformedLessonDataException.class)
-	public ResponseEntity<ApiErrorResponse> handleMalformedLessonDataException(MalformedLessonDataException e, WebRequest request) {
+	@ExceptionHandler(StreamWritingException.class)
+	public ResponseEntity<ApiErrorResponse> handleStreamWritingException(StreamWritingException e, WebRequest request) {
 		return createApiErrorResponse(
-				"Malformed Lesson Data",
+				"Stream Writing Error",
 				HttpStatus.INTERNAL_SERVER_ERROR,
 				e.getMessage(),
 				request.getDescription(false)
 		);
 	}
 
-	@ExceptionHandler(StreamWritingException.class)
-	public ResponseEntity<ApiErrorResponse> handleStreamWritingException(StreamWritingException e, WebRequest request) {
+	@ExceptionHandler(UnknownLessonTypeException.class)
+	public ResponseEntity<ApiErrorResponse> handleUnknownLessonTypeException(UnknownLessonTypeException e, WebRequest request) {
 		return createApiErrorResponse(
-				"Stream Writing Error",
-				HttpStatus.INTERNAL_SERVER_ERROR,
+				"Unknown Lesson Type",
+				HttpStatus.BAD_REQUEST,
 				e.getMessage(),
 				request.getDescription(false)
 		);

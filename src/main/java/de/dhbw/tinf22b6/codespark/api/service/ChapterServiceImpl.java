@@ -63,6 +63,7 @@ public class ChapterServiceImpl implements ChapterService {
 	}
 
 	@Override
+	@Transactional
 	public LessonOverviewResponse getLessonOverview(UUID chapterId) {
 		Chapter chapter = chapterRepository.findById(chapterId)
 						.orElseThrow(() -> new ChapterNotFoundException("No chapter was found for the provided ID"));
