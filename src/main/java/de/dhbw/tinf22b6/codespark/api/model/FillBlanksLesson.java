@@ -4,6 +4,7 @@ import de.dhbw.tinf22b6.codespark.api.common.LessonType;
 import jakarta.persistence.Column;
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -21,7 +22,7 @@ public class FillBlanksLesson extends Lesson {
 	@Column(nullable = false)
 	private String expectedOutput;
 
-	@ElementCollection
+	@ElementCollection(fetch = FetchType.EAGER)
 	@Column(nullable = false)
 	private List<String> solutions;
 

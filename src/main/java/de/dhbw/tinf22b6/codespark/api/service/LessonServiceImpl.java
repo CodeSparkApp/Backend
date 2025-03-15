@@ -33,6 +33,7 @@ public class LessonServiceImpl implements LessonService {
 	}
 
 	@Override
+	@Transactional
 	public LessonResponse getLessonById(UUID id) {
 		Lesson lesson = lessonRepository.findById(id)
 				.orElseThrow(() -> new LessonNotFoundException("No lesson was found for the provided ID"));
@@ -189,7 +190,6 @@ public class LessonServiceImpl implements LessonService {
 
 		updateAdjacentLessons(previousLesson, nextLesson, savedLesson);
 	}
-
 
 	@Override
 	@Transactional

@@ -4,6 +4,7 @@ import de.dhbw.tinf22b6.codespark.api.common.LessonType;
 import jakarta.persistence.Column;
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -19,11 +20,11 @@ public class MultipleChoiceLesson extends Lesson {
 	private String question;
 
 	@Column(nullable = false)
-	@ElementCollection
+	@ElementCollection(fetch = FetchType.EAGER)
 	private List<String> options;
 
 	@Column(nullable = false)
-	@ElementCollection
+	@ElementCollection(fetch = FetchType.EAGER)
 	private List<Integer> solutions;
 
 	public MultipleChoiceLesson(String title, String description, LessonType type, Chapter chapter,
