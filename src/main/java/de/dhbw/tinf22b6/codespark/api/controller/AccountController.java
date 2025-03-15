@@ -3,11 +3,10 @@ package de.dhbw.tinf22b6.codespark.api.controller;
 import de.dhbw.tinf22b6.codespark.api.payload.request.AccountCreateRequest;
 import de.dhbw.tinf22b6.codespark.api.payload.request.PasswordResetRequest;
 import de.dhbw.tinf22b6.codespark.api.payload.request.RequestPasswordResetRequest;
+import de.dhbw.tinf22b6.codespark.api.payload.response.AccountDetailsResponse;
 import de.dhbw.tinf22b6.codespark.api.payload.response.UploadImageResponse;
 import de.dhbw.tinf22b6.codespark.api.service.interfaces.AccountService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -22,6 +21,12 @@ public class AccountController {
 
 	public AccountController(@Autowired AccountService accountService) {
 		this.accountService = accountService;
+	}
+
+	@GetMapping("/profile")
+	public ResponseEntity<AccountDetailsResponse> getAccountDetails(Principal principal) {
+		AccountDetailsResponse response = accountService.getAccountDetails(UUID.fromString(principal.getName()));
+		return ResponseEntity.ok().body(response);
 	}
 
 	@PostMapping("/register")
@@ -50,13 +55,7 @@ public class AccountController {
 
 	@PostMapping("/upload-profile-image")
 	public ResponseEntity<UploadImageResponse> updateProfileImage(@RequestParam("file") MultipartFile file, Principal principal) {
-		String username = principal.getName();
-		UUID accountId = accountService.getAccountIdByUsername(username);
-
-		UploadImageResponse response = accountService.updateProfileImage(accountId, file);
-		return ResponseEntity
-				.status(HttpStatus.OK)
-				.contentType(MediaType.APPLICATION_JSON)
-				.body(response);
+		UploadImageResponse response = accountService.updateProfileImage(UUID.fromString(principal.getName()), file);
+		return ResponseEntity.ok().body(response);
 	}
 }

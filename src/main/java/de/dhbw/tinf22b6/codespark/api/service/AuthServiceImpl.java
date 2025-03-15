@@ -14,6 +14,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.UUID;
+
 @Service
 public class AuthServiceImpl implements AuthService {
 	private final AccountRepository accountRepository;
@@ -42,8 +44,8 @@ public class AuthServiceImpl implements AuthService {
 			throw new UnverifiedAccountException("The current account is not verified");
 		}
 
-		String accessToken = jwtUtil.generateAccessToken(account.getUsername(), account.getRole().name());
-		String refreshToken = jwtUtil.generateRefreshToken(account.getUsername());
+		String accessToken = jwtUtil.generateAccessToken(account.getId(), account.getRole().name());
+		String refreshToken = jwtUtil.generateRefreshToken(account.getId());
 
 		return new TokenResponse(accessToken, refreshToken);
 	}
@@ -54,9 +56,9 @@ public class AuthServiceImpl implements AuthService {
 			throw new InvalidRefreshTokenException("The refresh token is invalid or has expired");
 		}
 
-		String username = jwtUtil.extractUsername(request.getRefreshToken());
+		UUID accountID = jwtUtil.extractAccountID(request.getRefreshToken());
 		String role = jwtUtil.extractRole(request.getRefreshToken());
-		String newAccessToken = jwtUtil.generateAccessToken(username, role);
+		String newAccessToken = jwtUtil.generateAccessToken(accountID, role);
 		return new TokenResponse(newAccessToken, request.getRefreshToken());
 	}
 }

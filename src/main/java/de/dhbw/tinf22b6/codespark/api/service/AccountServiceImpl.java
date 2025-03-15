@@ -13,6 +13,7 @@ import de.dhbw.tinf22b6.codespark.api.model.VerificationToken;
 import de.dhbw.tinf22b6.codespark.api.payload.request.AccountCreateRequest;
 import de.dhbw.tinf22b6.codespark.api.payload.request.PasswordResetRequest;
 import de.dhbw.tinf22b6.codespark.api.payload.request.RequestPasswordResetRequest;
+import de.dhbw.tinf22b6.codespark.api.payload.response.AccountDetailsResponse;
 import de.dhbw.tinf22b6.codespark.api.payload.response.UploadImageResponse;
 import de.dhbw.tinf22b6.codespark.api.repository.AccountRepository;
 import de.dhbw.tinf22b6.codespark.api.repository.VerificationTokenRepository;
@@ -20,7 +21,6 @@ import de.dhbw.tinf22b6.codespark.api.service.interfaces.AccountService;
 import de.dhbw.tinf22b6.codespark.api.service.interfaces.EmailService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -55,6 +55,19 @@ public class AccountServiceImpl implements AccountService {
 	}
 
 	@Override
+	public AccountDetailsResponse getAccountDetails(UUID accountId) {
+		Account account = accountRepository.findById(accountId)
+				.orElseThrow(() -> new UserNotFoundException("No account was found for the provided ID"));
+
+		return new AccountDetailsResponse(
+				account.getId(),
+				account.getUsername(),
+				account.getEmail(),
+				account.getProfileImageUrl()
+		);
+	}
+
+	@Override
 	public void createAccount(AccountCreateRequest request) {
 		if (accountRepository.findByEmail(request.getEmail()).isPresent()) {
 			throw new AccountAlreadyExistsException("An account with this email already exists");
@@ -78,14 +91,10 @@ public class AccountServiceImpl implements AccountService {
 
 	@Override
 	public void verifyEmail(String token) {
-		Optional<VerificationToken> optionalToken =
-				verificationTokenRepository.findByTokenAndType(token, VerificationTokenType.EMAIL_VERIFICATION);
+		VerificationToken verificationToken =
+				verificationTokenRepository.findByTokenAndType(token, VerificationTokenType.EMAIL_VERIFICATION)
+						.orElseThrow(() -> new InvalidVerificationTokenException("The verification link is invalid or has expired"));
 
-		if (optionalToken.isEmpty()) {
-			throw new InvalidVerificationTokenException("The verification link is invalid or has expired");
-		}
-
-		VerificationToken verificationToken = optionalToken.get();
 		if (verificationToken.isExpired()) {
 			// TODO
 			return;
@@ -136,20 +145,9 @@ public class AccountServiceImpl implements AccountService {
 	}
 
 	@Override
-	public UUID getAccountIdByUsername(String username) {
-		return accountRepository.findByUsername(username)
-				.orElseThrow(() -> new UsernameNotFoundException("No account was found with this username"))
-				.getId();
-	}
-
-	@Override
 	public UploadImageResponse updateProfileImage(UUID accountId, MultipartFile file) {
-		Optional<Account> optionalAccount = accountRepository.findById(accountId);
-		if (optionalAccount.isEmpty()) {
-			throw new UserNotFoundException("No account was found for the provided ID");
-		}
-
-		Account account = optionalAccount.get();
+		Account account = accountRepository.findById(accountId)
+				.orElseThrow(() -> new UserNotFoundException("No account was found for the provided ID"));
 
 		// Upload file to Cloudinary
 		Map<?, ?> uploadResult;
