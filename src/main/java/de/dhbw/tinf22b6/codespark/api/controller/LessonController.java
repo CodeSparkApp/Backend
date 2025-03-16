@@ -1,5 +1,6 @@
 package de.dhbw.tinf22b6.codespark.api.controller;
 
+import de.dhbw.tinf22b6.codespark.api.model.Account;
 import de.dhbw.tinf22b6.codespark.api.payload.request.LessonCreateRequest;
 import de.dhbw.tinf22b6.codespark.api.payload.request.LessonSubmitRequest;
 import de.dhbw.tinf22b6.codespark.api.payload.request.LessonUpdateRequest;
@@ -10,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
@@ -29,12 +31,19 @@ public class LessonController {
 		return ResponseEntity.ok(response);
 	}
 
-	@PostMapping("/{lessonId}/submit")
-	public ResponseEntity<LessonSubmitResponse> submitAnswer(@PathVariable UUID lessonId, @RequestBody LessonSubmitRequest request) {
-		LessonSubmitResponse response = lessonService.evaluateAnswer(lessonId, request);
-		return response != null
-				? ResponseEntity.ok().body(response)
-				: ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+	@PostMapping("/{id}/submit")
+	public ResponseEntity<LessonSubmitResponse> evaluateLesson(@PathVariable UUID id,
+															   @RequestBody LessonSubmitRequest request,
+															   @AuthenticationPrincipal Account account) {
+		LessonSubmitResponse response = lessonService.evaluateLesson(id, request, account);
+		return ResponseEntity.ok().body(response);
+	}
+
+	@PostMapping("/{id}/skip")
+	public ResponseEntity<LessonSubmitResponse> skipLesson(@PathVariable UUID id,
+														   @AuthenticationPrincipal Account account) {
+		LessonSubmitResponse response = lessonService.skipLesson(id, account);
+		return ResponseEntity.ok().body(response);
 	}
 
 	@PostMapping("/create")
@@ -44,7 +53,7 @@ public class LessonController {
 		return ResponseEntity.status(HttpStatus.CREATED).build();
 	}
 
-	@PatchMapping("/{id}")
+	@PostMapping("/{id}")
 	@PreAuthorize("hasRole('ADMIN')")
 	public ResponseEntity<Void> updateLesson(@PathVariable UUID id, @RequestBody LessonUpdateRequest request) {
 		lessonService.updateLesson(id, request);

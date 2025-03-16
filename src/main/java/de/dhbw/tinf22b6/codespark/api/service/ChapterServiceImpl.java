@@ -1,17 +1,23 @@
 package de.dhbw.tinf22b6.codespark.api.service;
 
+import de.dhbw.tinf22b6.codespark.api.common.LessonProgressState;
 import de.dhbw.tinf22b6.codespark.api.exception.ChapterNotFoundException;
 import de.dhbw.tinf22b6.codespark.api.exception.LessonNotFoundException;
+import de.dhbw.tinf22b6.codespark.api.model.Account;
 import de.dhbw.tinf22b6.codespark.api.model.Chapter;
 import de.dhbw.tinf22b6.codespark.api.model.Lesson;
+import de.dhbw.tinf22b6.codespark.api.model.UserLessonProgress;
 import de.dhbw.tinf22b6.codespark.api.payload.request.ChapterCreateRequest;
 import de.dhbw.tinf22b6.codespark.api.payload.request.ChapterUpdateRequest;
 import de.dhbw.tinf22b6.codespark.api.payload.response.ChapterItemResponse;
 import de.dhbw.tinf22b6.codespark.api.payload.response.ChapterOverviewResponse;
 import de.dhbw.tinf22b6.codespark.api.payload.response.LessonItemResponse;
 import de.dhbw.tinf22b6.codespark.api.payload.response.LessonOverviewResponse;
+import de.dhbw.tinf22b6.codespark.api.projection.ChapterProgressProjection;
+import de.dhbw.tinf22b6.codespark.api.repository.ChapterProgressRepository;
 import de.dhbw.tinf22b6.codespark.api.repository.ChapterRepository;
 import de.dhbw.tinf22b6.codespark.api.repository.LessonRepository;
+import de.dhbw.tinf22b6.codespark.api.repository.UserLessonProgressRepository;
 import de.dhbw.tinf22b6.codespark.api.service.interfaces.ChapterService;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,17 +30,24 @@ import java.util.stream.Collectors;
 public class ChapterServiceImpl implements ChapterService {
 	private final ChapterRepository chapterRepository;
 	private final LessonRepository lessonRepository;
+	private final ChapterProgressRepository chapterProgressRepository;
+	private final UserLessonProgressRepository userLessonProgressRepository;
 
 	public ChapterServiceImpl(@Autowired ChapterRepository chapterRepository,
-							  @Autowired LessonRepository lessonRepository) {
+							  @Autowired LessonRepository lessonRepository,
+							  @Autowired ChapterProgressRepository chapterProgressRepository,
+							  @Autowired UserLessonProgressRepository userLessonProgressRepository) {
 		this.chapterRepository = chapterRepository;
 		this.lessonRepository = lessonRepository;
+		this.chapterProgressRepository = chapterProgressRepository;
+		this.userLessonProgressRepository = userLessonProgressRepository;
 	}
 
 	@Override
-	public ChapterOverviewResponse getChapterOverview() {
+	public ChapterOverviewResponse getChapterOverview(Account account) {
 		List<Chapter> allChapters = chapterRepository.findAll();
 
+		// TODO: Use views for the chapter sorting logic?
 		Set<UUID> nextChapterIds = allChapters.stream()
 				.map(Chapter::getNextChapter)
 				.filter(Objects::nonNull)
@@ -53,10 +66,18 @@ public class ChapterServiceImpl implements ChapterService {
 			currentChapter = currentChapter.getNextChapter();
 		}
 
+		List<ChapterProgressProjection> chapterProgress = chapterProgressRepository.findProgressByAccountId(account.getId());
+		Map<UUID, Float> progressMap = chapterProgress.stream() // Convert list to map for fast lookups
+				.collect(Collectors.toMap(ChapterProgressProjection::getChapterId, ChapterProgressProjection::getProgress));
+
 		ChapterOverviewResponse response = new ChapterOverviewResponse();
 		response.setChapters(
 				sortedChapters.stream()
-						.map(c -> new ChapterItemResponse(c.getId(), c.getTitle()))
+						.map(c -> new ChapterItemResponse(
+								c.getId(),
+								c.getTitle(),
+								progressMap.getOrDefault(c.getId(), 0.f) // Default to 0 if no progress entry
+						))
 						.collect(Collectors.toList())
 		);
 		return response;
@@ -64,10 +85,11 @@ public class ChapterServiceImpl implements ChapterService {
 
 	@Override
 	@Transactional
-	public LessonOverviewResponse getLessonOverview(UUID chapterId) {
+	public LessonOverviewResponse getLessonOverview(UUID chapterId, Account account) {
 		Chapter chapter = chapterRepository.findById(chapterId)
 						.orElseThrow(() -> new ChapterNotFoundException("No chapter was found for the provided ID"));
 
+		// TODO: Use views for the lesson sorting logic?
 		Lesson firstLesson = chapter.getFirstLesson();
 		List<Lesson> lessons = new ArrayList<>();
 
@@ -82,7 +104,21 @@ public class ChapterServiceImpl implements ChapterService {
 		response.setChapterDescription(chapter.getDescription());
 		response.setLessons(
 				lessons.stream()
-						.map(l -> new LessonItemResponse(l.getId(), l.getTitle()))
+						.map(l -> {
+								// Fetch progress or create a new entry
+								LessonProgressState state = userLessonProgressRepository.findByAccountAndLesson(account, l)
+								.map(UserLessonProgress::getState)
+								.orElseGet(() -> {
+									// Create and save a new progress entry
+									// TODO: Since the result is always 'LessonProgressState.UNATTEMPTED',
+									// 		 this logic can be executed in a different thread
+									UserLessonProgress newProgress = new UserLessonProgress(account, l, LessonProgressState.UNATTEMPTED);
+									userLessonProgressRepository.save(newProgress);
+									return newProgress.getState();
+								});
+
+								return new LessonItemResponse(l.getId(), l.getTitle(), state);
+						})
 						.collect(Collectors.toList())
 		);
 		return response;

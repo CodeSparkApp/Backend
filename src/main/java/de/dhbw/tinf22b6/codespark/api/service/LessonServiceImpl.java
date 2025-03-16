@@ -1,5 +1,6 @@
 package de.dhbw.tinf22b6.codespark.api.service;
 
+import de.dhbw.tinf22b6.codespark.api.common.LessonEvaluationState;
 import de.dhbw.tinf22b6.codespark.api.exception.ChapterNotFoundException;
 import de.dhbw.tinf22b6.codespark.api.exception.LessonNotFoundException;
 import de.dhbw.tinf22b6.codespark.api.exception.UnknownLessonTypeException;
@@ -91,13 +92,36 @@ public class LessonServiceImpl implements LessonService {
 	}
 
 	@Override
-	public LessonSubmitResponse evaluateAnswer(UUID lessonId, LessonSubmitRequest request) {
-		Lesson lesson = lessonRepository.findById(lessonId)
+	public LessonSubmitResponse evaluateLesson(UUID id, LessonSubmitRequest request, Account account) {
+		Lesson lesson = lessonRepository.findById(id)
 				.orElseThrow(() -> new LessonNotFoundException("No lesson was found for the provided ID"));
 
-		return lessonEvaluationService.evaluateLesson(lesson, request)
-				? new LessonSubmitResponse(lesson.getNextLesson() != null ? lesson.getNextLesson().getId() : null)
-				: null;
+		boolean isCorrect = lessonEvaluationService.evaluateLesson(lesson, request, account);
+		if (!isCorrect) {
+			return new LessonSubmitResponse(LessonEvaluationState.INCORRECT, null);
+		}
+
+		Lesson nextLesson = lesson.getNextLesson();
+		if (nextLesson != null) {
+			return new LessonSubmitResponse(LessonEvaluationState.CORRECT, nextLesson.getId());
+		}
+
+		return new LessonSubmitResponse(LessonEvaluationState.CHAPTER_COMPLETE_SOLVED, null);
+	}
+
+	@Override
+	public LessonSubmitResponse skipLesson(UUID id, Account account) {
+		Lesson lesson = lessonRepository.findById(id)
+				.orElseThrow(() -> new LessonNotFoundException("No lesson was found for the provided ID"));
+
+		lessonEvaluationService.skipLesson(lesson, account);
+
+		Lesson nextLesson = lesson.getNextLesson();
+		if (nextLesson != null) {
+			return new LessonSubmitResponse(LessonEvaluationState.SKIPPED, nextLesson.getId());
+		}
+
+		return new LessonSubmitResponse(LessonEvaluationState.CHAPTER_COMPLETE_SKIPPED, null);
 	}
 
 	@Override

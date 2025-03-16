@@ -7,7 +7,6 @@ import de.dhbw.tinf22b6.codespark.api.common.VerificationTokenType;
 import de.dhbw.tinf22b6.codespark.api.exception.AccountAlreadyExistsException;
 import de.dhbw.tinf22b6.codespark.api.exception.ImageUploadException;
 import de.dhbw.tinf22b6.codespark.api.exception.InvalidVerificationTokenException;
-import de.dhbw.tinf22b6.codespark.api.exception.UserNotFoundException;
 import de.dhbw.tinf22b6.codespark.api.model.Account;
 import de.dhbw.tinf22b6.codespark.api.model.VerificationToken;
 import de.dhbw.tinf22b6.codespark.api.payload.request.AccountCreateRequest;
@@ -55,10 +54,7 @@ public class AccountServiceImpl implements AccountService {
 	}
 
 	@Override
-	public AccountDetailsResponse getAccountDetails(UUID accountId) {
-		Account account = accountRepository.findById(accountId)
-				.orElseThrow(() -> new UserNotFoundException("No account was found for the provided ID"));
-
+	public AccountDetailsResponse getAccountDetails(Account account) {
 		return new AccountDetailsResponse(
 				account.getId(),
 				account.getUsername(),
@@ -145,11 +141,7 @@ public class AccountServiceImpl implements AccountService {
 	}
 
 	@Override
-	public UploadImageResponse updateProfileImage(UUID accountId, MultipartFile file) {
-		Account account = accountRepository.findById(accountId)
-				.orElseThrow(() -> new UserNotFoundException("No account was found for the provided ID"));
-
-		// Upload file to Cloudinary
+	public UploadImageResponse updateProfileImage(Account account, MultipartFile file) {
 		Map<?, ?> uploadResult;
 		try {
 			uploadResult = cloudinary.uploader().upload(file.getBytes(), ObjectUtils.emptyMap());

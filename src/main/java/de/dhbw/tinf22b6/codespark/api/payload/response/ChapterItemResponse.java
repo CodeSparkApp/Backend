@@ -18,4 +18,7 @@ public class ChapterItemResponse {
 
 	@JsonProperty("title")
 	private String title;
+
+	@JsonProperty("progress")
+	private float progress;
 }

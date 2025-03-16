@@ -10,7 +10,6 @@ import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
 import java.util.Date;
-import java.util.UUID;
 
 @Component
 public class JwtUtil {
@@ -22,9 +21,9 @@ public class JwtUtil {
 		this.key = Keys.hmacShaKeyFor(Decoders.BASE64.decode(env.getRequiredProperty("auth.jwt.secret")));
 	}
 
-	public String generateAccessToken(UUID accountId, String role) {
+	public String generateAccessToken(String username, String role) {
 		return Jwts.builder()
-				.subject(accountId.toString())
+				.subject(username)
 				.claim("role", role)
 				.issuedAt(new Date())
 				.expiration(new Date(System.currentTimeMillis() + env.getRequiredProperty("auth.jwt.access-token-expiration", Long.class)))
@@ -32,22 +31,22 @@ public class JwtUtil {
 				.compact();
 	}
 
-	public String generateRefreshToken(UUID accountId) {
+	public String generateRefreshToken(String username) {
 		return Jwts.builder()
-				.subject(accountId.toString())
+				.subject(username)
 				.issuedAt(new Date())
 				.expiration(new Date(System.currentTimeMillis() + env.getRequiredProperty("auth.jwt.refresh-token-expiration", Long.class)))
 				.signWith(key)
 				.compact();
 	}
 
-	public UUID extractAccountID(String token) {
-		return UUID.fromString(Jwts.parser()
+	public String extractUsername(String token) {
+		return Jwts.parser()
 				.verifyWith(key)
 				.build()
 				.parseSignedClaims(token)
 				.getPayload()
-				.getSubject());
+				.getSubject();
 	}
 
 	public String extractRole(String token) {

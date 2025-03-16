@@ -1,11 +1,10 @@
 package de.dhbw.tinf22b6.codespark.api.service.interfaces;
 
+import de.dhbw.tinf22b6.codespark.api.model.Account;
 import de.dhbw.tinf22b6.codespark.api.payload.request.PromptRequest;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
-import java.util.UUID;
-
 public interface ConversationService {
-	String processPrompt(UUID accountId, PromptRequest request);
-	StreamingResponseBody processPromptStream(UUID accountId, PromptRequest request);
+	String processPrompt(Account account, PromptRequest request);
+	StreamingResponseBody processPromptStream(Account account, PromptRequest request);
 }
