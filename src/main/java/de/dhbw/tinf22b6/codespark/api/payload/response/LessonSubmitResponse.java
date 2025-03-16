@@ -1,6 +1,7 @@
 package de.dhbw.tinf22b6.codespark.api.payload.response;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import de.dhbw.tinf22b6.codespark.api.common.LessonEvaluationState;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -13,6 +14,9 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 public class LessonSubmitResponse {
+	@JsonProperty("evaluation_result")
+	private LessonEvaluationState evaluationResult;
+
 	@JsonProperty("next_lesson_id")
 	private UUID nextLesson;
 }
