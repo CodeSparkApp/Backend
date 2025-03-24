@@ -6,6 +6,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Getter
@@ -24,4 +25,7 @@ public class AccountDetailsResponse {
 
 	@JsonProperty("profile_image_url")
 	private String profileImageUrl;
+
+	@JsonProperty("exam_date")
+	private LocalDateTime examDate;
 }

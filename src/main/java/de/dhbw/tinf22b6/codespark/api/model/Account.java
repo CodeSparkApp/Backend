@@ -43,6 +43,9 @@ public class Account {
 	@OneToMany(mappedBy = "account", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
 	private List<VerificationToken> verificationTokens = new ArrayList<>();
 
+	@OneToOne(mappedBy = "account", cascade = CascadeType.ALL, orphanRemoval = true)
+	private ExamDate examDate;
+
 	public Account(String username, String email, String password, UserRoleType role, boolean verified) {
 		this.username = username;
 		this.email = email;
