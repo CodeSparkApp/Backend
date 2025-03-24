@@ -143,9 +143,16 @@ public class AccountServiceImpl implements AccountService {
 
 	@Override
 	public UploadImageResponse updateProfileImage(Account account, MultipartFile file) {
+		Map<?, ?> uploadOptions = ObjectUtils.asMap(
+				"folder", "user-content/profile-images",
+				"public_id", account.getId().toString(),
+				"overwrite", true,
+				"invalidate", true
+		);
+
 		Map<?, ?> uploadResult;
 		try {
-			uploadResult = cloudinary.uploader().upload(file.getBytes(), ObjectUtils.emptyMap());
+			uploadResult = cloudinary.uploader().upload(file.getBytes(), uploadOptions);
 		} catch (IOException e) {
 			throw new ImageUploadException("An error occurred while trying to upload the image");
 		}
