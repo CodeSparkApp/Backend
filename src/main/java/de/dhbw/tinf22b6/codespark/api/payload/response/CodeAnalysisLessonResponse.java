@@ -19,8 +19,8 @@ public class CodeAnalysisLessonResponse extends LessonResponse {
 	private String question;
 
 	public CodeAnalysisLessonResponse(UUID id, String title, String description, LessonType type,
-									  String code, String question) {
-		super(id, title, description, type);
+									  UUID chapterId, String code, String question) {
+		super(id, title, description, type, chapterId);
 		this.code = code;
 		this.question = question;
 	}

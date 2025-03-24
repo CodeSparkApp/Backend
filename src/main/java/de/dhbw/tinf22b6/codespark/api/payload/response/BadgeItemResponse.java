@@ -1,32 +1,31 @@
 package de.dhbw.tinf22b6.codespark.api.payload.response;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import de.dhbw.tinf22b6.codespark.api.common.LessonType;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public abstract class LessonResponse {
+public class BadgeItemResponse {
 	@JsonProperty("id")
 	private UUID id;
 
-	@JsonProperty("title")
-	private String title;
+	@JsonProperty("name")
+	private String name;
 
 	@JsonProperty("description")
 	private String description;
 
-	@JsonProperty("type")
-	private LessonType type;
+	@JsonProperty("icon")
+	private String icon;
 
-	@JsonProperty("chapter_id")
-	private UUID chapterId;
+	@JsonProperty("receive_date")
+	private LocalDateTime receiveDate;
 }
-

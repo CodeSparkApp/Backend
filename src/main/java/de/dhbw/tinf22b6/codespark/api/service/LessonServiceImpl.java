@@ -45,6 +45,7 @@ public class LessonServiceImpl implements LessonService {
 					theoryLesson.getTitle(),
 					theoryLesson.getDescription(),
 					theoryLesson.getType(),
+					theoryLesson.getChapter().getId(),
 					theoryLesson.getText()
 			);
 			case CodeAnalysisLesson codeAnalysisLesson -> new CodeAnalysisLessonResponse(
@@ -52,6 +53,7 @@ public class LessonServiceImpl implements LessonService {
 					codeAnalysisLesson.getTitle(),
 					codeAnalysisLesson.getDescription(),
 					codeAnalysisLesson.getType(),
+					codeAnalysisLesson.getChapter().getId(),
 					codeAnalysisLesson.getCode(),
 					codeAnalysisLesson.getQuestion()
 			);
@@ -60,6 +62,7 @@ public class LessonServiceImpl implements LessonService {
 					multipleChoiceLesson.getTitle(),
 					multipleChoiceLesson.getDescription(),
 					multipleChoiceLesson.getType(),
+					multipleChoiceLesson.getChapter().getId(),
 					multipleChoiceLesson.getQuestion(),
 					multipleChoiceLesson.getOptions()
 			);
@@ -68,6 +71,7 @@ public class LessonServiceImpl implements LessonService {
 					fillBlanksLesson.getTitle(),
 					fillBlanksLesson.getDescription(),
 					fillBlanksLesson.getType(),
+					fillBlanksLesson.getChapter().getId(),
 					fillBlanksLesson.getTemplateCode(),
 					fillBlanksLesson.getExpectedOutput()
 			);
@@ -76,6 +80,7 @@ public class LessonServiceImpl implements LessonService {
 					debuggingLesson.getTitle(),
 					debuggingLesson.getDescription(),
 					debuggingLesson.getType(),
+					debuggingLesson.getChapter().getId(),
 					debuggingLesson.getFaultyCode(),
 					debuggingLesson.getExpectedOutput()
 			);
@@ -84,6 +89,7 @@ public class LessonServiceImpl implements LessonService {
 					programmingLesson.getTitle(),
 					programmingLesson.getDescription(),
 					programmingLesson.getType(),
+					programmingLesson.getChapter().getId(),
 					programmingLesson.getProblem(),
 					programmingLesson.getCode()
 			);

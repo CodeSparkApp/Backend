@@ -19,8 +19,8 @@ public class FillBlanksLessonResponse extends LessonResponse {
 	private String expectedOutput;
 
 	public FillBlanksLessonResponse(UUID id, String title, String description, LessonType type,
-									String templateCode, String expectedOutput) {
-		super(id, title, description, type);
+									UUID chapterId, String templateCode, String expectedOutput) {
+		super(id, title, description, type, chapterId);
 		this.templateCode = templateCode;
 		this.expectedOutput = expectedOutput;
 	}

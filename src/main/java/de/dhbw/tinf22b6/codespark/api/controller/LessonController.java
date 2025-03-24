@@ -6,6 +6,7 @@ import de.dhbw.tinf22b6.codespark.api.payload.request.LessonSubmitRequest;
 import de.dhbw.tinf22b6.codespark.api.payload.request.LessonUpdateRequest;
 import de.dhbw.tinf22b6.codespark.api.payload.response.LessonResponse;
 import de.dhbw.tinf22b6.codespark.api.payload.response.LessonSubmitResponse;
+import de.dhbw.tinf22b6.codespark.api.service.interfaces.BadgeService;
 import de.dhbw.tinf22b6.codespark.api.service.interfaces.LessonService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -20,9 +21,12 @@ import java.util.UUID;
 @RequestMapping(value = "/api/v1/lesson")
 public class LessonController {
 	private final LessonService lessonService;
+	private final BadgeService badgeService;
 
-	public LessonController(@Autowired LessonService lessonService) {
+	public LessonController(@Autowired LessonService lessonService,
+							@Autowired BadgeService badgeService) {
 		this.lessonService = lessonService;
+		this.badgeService = badgeService;
 	}
 
 	@GetMapping("/{id}")
@@ -36,6 +40,7 @@ public class LessonController {
 															   @RequestBody LessonSubmitRequest request,
 															   @AuthenticationPrincipal Account account) {
 		LessonSubmitResponse response = lessonService.evaluateLesson(id, request, account);
+		badgeService.checkAndAssignBadges(account);
 		return ResponseEntity.ok().body(response);
 	}
 

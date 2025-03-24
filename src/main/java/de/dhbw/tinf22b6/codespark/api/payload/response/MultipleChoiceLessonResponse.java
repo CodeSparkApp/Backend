@@ -20,8 +20,8 @@ public class MultipleChoiceLessonResponse extends LessonResponse {
 	private List<String> options;
 
 	public MultipleChoiceLessonResponse(UUID id, String title, String description, LessonType type,
-									  	String question, List<String> options) {
-		super(id, title, description, type);
+									  	UUID chapterId, String question, List<String> options) {
+		super(id, title, description, type, chapterId);
 		this.question = question;
 		this.options = options;
 	}

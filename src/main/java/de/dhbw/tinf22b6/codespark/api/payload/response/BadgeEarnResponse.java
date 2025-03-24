@@ -1,7 +1,6 @@
 package de.dhbw.tinf22b6.codespark.api.payload.response;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import de.dhbw.tinf22b6.codespark.api.common.LessonType;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -13,20 +12,16 @@ import java.util.UUID;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public abstract class LessonResponse {
+public class BadgeEarnResponse {
 	@JsonProperty("id")
 	private UUID id;
 
-	@JsonProperty("title")
-	private String title;
+	@JsonProperty("name")
+	private String name;
 
 	@JsonProperty("description")
 	private String description;
 
-	@JsonProperty("type")
-	private LessonType type;
-
-	@JsonProperty("chapter_id")
-	private UUID chapterId;
+	@JsonProperty("icon")
+	private String icon;
 }
-
