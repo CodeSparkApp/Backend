@@ -59,8 +59,7 @@ public class AccountServiceImpl implements AccountService {
 				account.getId(),
 				account.getUsername(),
 				account.getEmail(),
-				account.getProfileImageUrl(),
-				account.getExamDate() != null ? account.getExamDate().getDate() : null
+				account.getProfileImageUrl()
 		);
 	}
 
