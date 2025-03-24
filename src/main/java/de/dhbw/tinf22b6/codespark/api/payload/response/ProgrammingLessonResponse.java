@@ -19,8 +19,8 @@ public class ProgrammingLessonResponse extends LessonResponse {
 	private String code;
 
 	public ProgrammingLessonResponse(UUID id, String title, String description, LessonType type,
-									 String problem, String code) {
-		super(id, title, description, type);
+									 UUID chapterId, String problem, String code) {
+		super(id, title, description, type, chapterId);
 		this.problem = problem;
 		this.code = code;
 	}

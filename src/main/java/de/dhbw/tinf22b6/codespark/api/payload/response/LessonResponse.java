@@ -25,5 +25,8 @@ public abstract class LessonResponse {
 
 	@JsonProperty("type")
 	private LessonType type;
+
+	@JsonProperty("chapter_id")
+	private UUID chapterId;
 }
 

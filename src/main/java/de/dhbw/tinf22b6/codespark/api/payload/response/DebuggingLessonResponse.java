@@ -19,8 +19,8 @@ public class DebuggingLessonResponse extends LessonResponse {
 	private String expectedOutput;
 
 	public DebuggingLessonResponse(UUID id, String title, String description, LessonType type,
-								   String faultyCode, String expectedOutput) {
-		super(id, title, description, type);
+								   UUID chapterId, String faultyCode, String expectedOutput) {
+		super(id, title, description, type, chapterId);
 		this.faultyCode = faultyCode;
 		this.expectedOutput = expectedOutput;
 	}

@@ -16,8 +16,8 @@ public class TheoryLessonResponse extends LessonResponse {
 	private String text;
 
 	public TheoryLessonResponse(UUID id, String title, String description, LessonType type,
-								String text) {
-		super(id, title, description, type);
+								UUID chapterId, String text) {
+		super(id, title, description, type, chapterId);
 		this.text = text;
 	}
 }
