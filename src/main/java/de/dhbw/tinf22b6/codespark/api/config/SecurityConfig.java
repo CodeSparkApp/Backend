@@ -30,6 +30,8 @@ public class SecurityConfig {
 				.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 				.authorizeHttpRequests(auth -> auth
 						.requestMatchers(
+								"/ws/**",
+
 								"/api/v1/account/register",
 								"/api/v1/account/verify",
 								"/api/v1/account/request-reset",

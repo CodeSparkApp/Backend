@@ -39,7 +39,7 @@ public class JwtFilter extends OncePerRequestFilter {
 									@NonNull HttpServletResponse response,
 									@NonNull FilterChain chain) throws ServletException, IOException {
 		String authorizationValue = request.getHeader("Authorization");
-		if ((authorizationValue == null) || !authorizationValue.startsWith("Bearer ")) {
+		if ((authorizationValue == null) || (!authorizationValue.startsWith("Bearer "))) {
 			chain.doFilter(request, response);
 			return;
 		}
