@@ -41,8 +41,9 @@ jobs:
           name: codespark-backend
           path: staging
           retention-days: 1
-          
-      - name: Update dependency graph
-        uses: advanced-security/maven-dependency-submission-action@v4
-        with:
-          ignore-maven-wrapper: true
+
+      # TODO: Reenable when repo is public
+      #- name: Update dependency graph
+      #  uses: advanced-security/maven-dependency-submission-action@v4
+      #  with:
+      #    ignore-maven-wrapper: true
