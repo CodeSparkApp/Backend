@@ -11,13 +11,6 @@ jobs:
     runs-on: ubuntu-latest
     env:
       SPRING_PROFILES_ACTIVE: ${{ vars.SPRING_PROFILES_ACTIVE }}
-      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-      OPENAI_API_ORGANIZATION_ID: ${{ secrets.OPENAI_API_ORGANIZATION_ID }}
-      OPENAI_API_PROJECT_ID: ${{ secrets.OPENAI_API_PROJECT_ID }}
-      SMTP_ACCOUNT_EMAIL: ${{ secrets.SMTP_ACCOUNT_EMAIL }}
-      SMTP_ACCOUNT_PASSWORD: ${{ secrets.SMTP_ACCOUNT_PASSWORD }}
-      JWT_SECRET_KEY: ${{ secrets.JWT_SECRET_KEY }}
-      CLOUDINARY_URL: ${{ secrets.CLOUDINARY_URL }}
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -42,7 +35,7 @@ jobs:
           path: staging
           retention-days: 1
 
-      # TODO: Reenable when repo is public
+      # TODO: Re-enable when repo is public
       #- name: Update dependency graph
       #  uses: advanced-security/maven-dependency-submission-action@v4
       #  with:
