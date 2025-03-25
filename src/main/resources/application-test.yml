@@ -7,3 +7,20 @@ spring:
     console:
       enabled: true
       path: /h2-console
+
+auth:
+  jwt:
+    secret: ZHVtbXlkdW1teWR1bW15ZHVtbXlkdW1teWR1bW15ZHVtbXk=
+
+smtp:
+  email: dummy@dummy.com
+  password: dummy
+
+openai:
+  api:
+    organization-id: org-dummy
+    project-id: proj_dummy
+    key: sk-proj-dummy
+
+cloudinary:
+  api-url: cloudinary://dummy:dummy@dummy
