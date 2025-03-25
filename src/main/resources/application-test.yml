@@ -10,7 +10,7 @@ spring:
 
 auth:
   jwt:
-    secret: ZHVtbXk=
+    secret: ZHVtbXlkdW1teWR1bW15ZHVtbXlkdW1teWR1bW15ZHVtbXk=
 
 smtp:
   email: dummy@dummy.com
