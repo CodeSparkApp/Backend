@@ -1,10 +1,7 @@
 package de.dhbw.tinf22b6.codespark.api.model;
 
 import de.dhbw.tinf22b6.codespark.api.common.LessonType;
-import jakarta.persistence.Column;
-import jakarta.persistence.ElementCollection;
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
+import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -15,6 +12,7 @@ import java.util.List;
 @Setter
 @NoArgsConstructor
 @Entity
+@PrimaryKeyJoinColumn(name = "id")
 public class FillBlanksLesson extends Lesson {
 	@Column(columnDefinition = "TEXT", nullable = false)
 	private String templateCode;
@@ -23,7 +21,12 @@ public class FillBlanksLesson extends Lesson {
 	private String expectedOutput;
 
 	@ElementCollection(fetch = FetchType.EAGER)
-	@Column(nullable = false)
+	@CollectionTable(
+			name = "fill_blanks_lesson_solutions",
+			joinColumns = @JoinColumn(name = "lesson_id")
+	)
+	@Column(name = "solution", nullable = false)
+	@OrderColumn(name = "solution_index")
 	private List<String> solutions;
 
 	public FillBlanksLesson(String title, String description, LessonType type, Chapter chapter,

@@ -6,23 +6,22 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.util.UUID;
-
 @Getter
 @Setter
 @NoArgsConstructor
 @Entity
 public class UserLessonProgress {
-	@Id
-	@GeneratedValue(strategy = GenerationType.UUID)
-	private UUID id;
+	@EmbeddedId
+	private UserLessonProgressId id;
 
 	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(nullable = false)
+	@MapsId("accountId")
+	@JoinColumn(name = "account_id", nullable = false)
 	private Account account;
 
 	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(nullable = false)
+	@MapsId("lessonId")
+	@JoinColumn(name = "lesson_id", nullable = false)
 	private Lesson lesson;
 
 	@Enumerated(EnumType.STRING)
@@ -30,6 +29,7 @@ public class UserLessonProgress {
 	private LessonProgressState state;
 
 	public UserLessonProgress(Account account, Lesson lesson, LessonProgressState state) {
+		this.id = new UserLessonProgressId(account.getId(), lesson.getId());
 		this.account = account;
 		this.lesson = lesson;
 		this.state = state;
