@@ -35,8 +35,7 @@ jobs:
           path: staging
           retention-days: 1
 
-      # TODO: Re-enable when repo is public
-      #- name: Update dependency graph
-      #  uses: advanced-security/maven-dependency-submission-action@v4
-      #  with:
-      #    ignore-maven-wrapper: true
+      - name: Update dependency graph
+        uses: advanced-security/maven-dependency-submission-action@v4
+        with:
+          ignore-maven-wrapper: true
