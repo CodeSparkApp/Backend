@@ -7,8 +7,7 @@ on:
     branches: [ 'master' ]
 
 permissions:
-  contents: read
-  security-events: write
+  checks: write
 
 jobs:
   build:
@@ -40,6 +39,7 @@ jobs:
           retention-days: 1
 
       - name: Update dependency graph
+        if: github.event_name == 'push'
         uses: advanced-security/maven-dependency-submission-action@v4
         with:
           ignore-maven-wrapper: true
