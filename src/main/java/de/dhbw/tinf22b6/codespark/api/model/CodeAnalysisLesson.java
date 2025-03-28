@@ -3,6 +3,7 @@ package de.dhbw.tinf22b6.codespark.api.model;
 import de.dhbw.tinf22b6.codespark.api.common.LessonType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.PrimaryKeyJoinColumn;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -11,6 +12,7 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @Entity
+@PrimaryKeyJoinColumn(name = "id")
 public class CodeAnalysisLesson extends Lesson {
 	@Column(columnDefinition = "TEXT", nullable = false)
 	private String code;

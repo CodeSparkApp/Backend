@@ -1,10 +1,7 @@
 package de.dhbw.tinf22b6.codespark.api.model;
 
 import de.dhbw.tinf22b6.codespark.api.common.LessonType;
-import jakarta.persistence.Column;
-import jakarta.persistence.ElementCollection;
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
+import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -15,16 +12,27 @@ import java.util.List;
 @Setter
 @NoArgsConstructor
 @Entity
+@PrimaryKeyJoinColumn(name = "id")
 public class MultipleChoiceLesson extends Lesson {
 	@Column(columnDefinition = "TEXT", nullable = false)
 	private String question;
 
-	@Column(nullable = false)
 	@ElementCollection(fetch = FetchType.EAGER)
+	@CollectionTable(
+			name = "multiple_choice_lesson_options",
+			joinColumns = @JoinColumn(name = "lesson_id")
+	)
+	@Column(name = "option", nullable = false)
+	@OrderColumn(name = "options_index")
 	private List<String> options;
 
-	@Column(nullable = false)
 	@ElementCollection(fetch = FetchType.EAGER)
+	@CollectionTable(
+			name = "multiple_choice_lesson_solutions",
+			joinColumns = @JoinColumn(name = "lesson_id")
+	)
+	@Column(name = "solution", nullable = false)
+	@OrderColumn(name = "solution_index")
 	private List<Integer> solutions;
 
 	public MultipleChoiceLesson(String title, String description, LessonType type, Chapter chapter,
