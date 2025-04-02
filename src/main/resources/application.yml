@@ -33,7 +33,7 @@ openai:
     project-id: ${OPENAI_API_PROJECT_ID}
     key: ${OPENAI_API_KEY}
   model:
-    name: "gpt-4o-mini"
+    name: "gpt-4o"
 
 cloudinary:
   api-url: ${CLOUDINARY_URL}

@@ -17,6 +17,9 @@ public class LessonSubmitResponse {
 	@JsonProperty("evaluation_result")
 	private LessonEvaluationState evaluationResult;
 
+	@JsonProperty("explanation")
+	private String explanation;
+
 	@JsonProperty("next_lesson_id")
 	private UUID nextLesson;
 }
