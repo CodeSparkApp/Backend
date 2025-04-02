@@ -17,6 +17,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Service
 public class LessonEvaluationServiceImpl implements LessonEvaluationService {
@@ -93,17 +94,19 @@ public class LessonEvaluationServiceImpl implements LessonEvaluationService {
 	}
 
 	private LessonEvaluationResult handleMultipleChoiceLesson(MultipleChoiceLesson multipleChoiceLesson, MultipleChoiceLessonSubmitRequest request) {
-		return new LessonEvaluationResult(
-				null,
-				new HashSet<>(request.getSolutions()).containsAll(multipleChoiceLesson.getSolutions())
-		);
+		Set<Integer> expected = new HashSet<>(multipleChoiceLesson.getSolutions());
+		Set<Integer> submitted = new HashSet<>(request.getSolutions());
+
+		boolean isCorrect = submitted.equals(expected);
+		return new LessonEvaluationResult(null, isCorrect);
 	}
 
 	private LessonEvaluationResult handleFillBlanksLesson(FillBlanksLesson fillBlanksLesson, FillBlanksLessonSubmitRequest request) {
-		return new LessonEvaluationResult(
-				null,
-				new HashSet<>(request.getSolutions()).containsAll(fillBlanksLesson.getSolutions())
-		);
+		Set<String> expected = new HashSet<>(fillBlanksLesson.getSolutions());
+		Set<String> submitted = new HashSet<>(request.getSolutions());
+
+		boolean isCorrect = submitted.equals(expected);
+		return new LessonEvaluationResult(null, isCorrect);
 	}
 
 	private LessonEvaluationResult handleDebuggingLesson(DebuggingLesson debuggingLesson, DebuggingLessonSubmitRequest request) {
