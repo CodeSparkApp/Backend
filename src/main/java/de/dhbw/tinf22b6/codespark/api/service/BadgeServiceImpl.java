@@ -54,7 +54,6 @@ public class BadgeServiceImpl implements BadgeService {
 	@Override
 	public BadgesOverviewResponse getBadgesOverview(Account account) {
 		List<Badge> badges = badgeRepository.findAll();
-		List<UserBadge> userBadges = userBadgeRepository.findAll();
 
 		BadgesOverviewResponse response = new BadgesOverviewResponse();
 		response.setBadges(
