@@ -47,14 +47,12 @@ public class JwtFilter extends OncePerRequestFilter {
 		String token = authorizationValue.replace("Bearer ", "");
 		if (jwtUtil.validateToken(token)) {
 			String username = jwtUtil.extractUsername(token);
-			String role = jwtUtil.extractRole(token);
-
 			Account account = accountRepository.findByUsername(username)
 					.orElseThrow(() -> new UsernameNotFoundException("Username not found"));
 
 			UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
 					// Prefix with 'ROLE_' so 'hasRole()' can be used instead of 'hasAuthority()'
-					account, null, Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + role))
+					account, null, Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + account.getRole().name()))
 			);
 
 			SecurityContext context = SecurityContextHolder.createEmptyContext();
