@@ -1,8 +1,7 @@
 package de.dhbw.tinf22b6.codespark.api.service;
 
 import de.dhbw.tinf22b6.codespark.api.common.LessonEvaluationState;
-import de.dhbw.tinf22b6.codespark.api.exception.ChapterNotFoundException;
-import de.dhbw.tinf22b6.codespark.api.exception.LessonNotFoundException;
+import de.dhbw.tinf22b6.codespark.api.exception.EntryNotFoundException;
 import de.dhbw.tinf22b6.codespark.api.exception.UnknownLessonTypeException;
 import de.dhbw.tinf22b6.codespark.api.model.*;
 import de.dhbw.tinf22b6.codespark.api.payload.request.LessonCreateRequest;
@@ -38,7 +37,7 @@ public class LessonServiceImpl implements LessonService {
 	@Transactional
 	public LessonResponse getLessonById(UUID id) {
 		Lesson lesson = lessonRepository.findById(id)
-				.orElseThrow(() -> new LessonNotFoundException("No lesson was found for the provided ID"));
+				.orElseThrow(() -> new EntryNotFoundException("The requested lesson could not be found."));
 
 		return switch (lesson) {
 			case TheoryLesson theoryLesson -> new TheoryLessonResponse(
@@ -94,14 +93,14 @@ public class LessonServiceImpl implements LessonService {
 					programmingLesson.getProblem(),
 					programmingLesson.getCode()
 			);
-			default -> throw new UnknownLessonTypeException("Unexpected lesson type: " + lesson.getClass().getSimpleName());
+			default -> throw new UnknownLessonTypeException("The lesson type is not supported or recognized.");
 		};
 	}
 
 	@Override
 	public LessonSubmitResponse evaluateLesson(UUID id, LessonSubmitRequest request, Account account) {
 		Lesson lesson = lessonRepository.findById(id)
-				.orElseThrow(() -> new LessonNotFoundException("No lesson was found for the provided ID"));
+				.orElseThrow(() -> new EntryNotFoundException("The requested lesson could not be found."));
 
 		LessonEvaluationResult result = lessonEvaluationService.evaluateLesson(lesson, request, account);
 		if (!result.isCorrect()) {
@@ -119,7 +118,7 @@ public class LessonServiceImpl implements LessonService {
 	@Override
 	public LessonSubmitResponse skipLesson(UUID id, Account account) {
 		Lesson lesson = lessonRepository.findById(id)
-				.orElseThrow(() -> new LessonNotFoundException("No lesson was found for the provided ID"));
+				.orElseThrow(() -> new EntryNotFoundException("The requested lesson could not be found."));
 
 		lessonEvaluationService.skipLesson(lesson, account);
 
@@ -135,16 +134,16 @@ public class LessonServiceImpl implements LessonService {
 	@Transactional
 	public void createLesson(LessonCreateRequest request) {
 		Chapter chapter = chapterRepository.findById(request.getChapterId())
-				.orElseThrow(() -> new ChapterNotFoundException("No chapter was found for the provided ID"));
+				.orElseThrow(() -> new EntryNotFoundException("The requested chapter could not be found."));
 
 		Lesson nextLesson = (request.getNextLessonId() != null)
 				? lessonRepository.findById(request.getNextLessonId())
-				.orElseThrow(() -> new LessonNotFoundException("No lesson was found for the provided ID of the 'next lesson'"))
+				.orElseThrow(() -> new EntryNotFoundException("The specified next lesson could not be found."))
 				: null;
 
 		Lesson previousLesson = (request.getPreviousLessonId() != null)
 				? lessonRepository.findById(request.getPreviousLessonId())
-				.orElseThrow(() -> new LessonNotFoundException("No lesson was found for the provided ID of the 'previous lesson'"))
+				.orElseThrow(() -> new EntryNotFoundException("The specified previous lesson could not be found."))
 				: null;
 
 		Lesson newLesson;
@@ -214,7 +213,7 @@ public class LessonServiceImpl implements LessonService {
 					request.getOptions(),
 					request.getCorrectOptions()
 			);
-			default -> throw new IllegalArgumentException("Invalid lesson type provided: " + request.getType());
+			default -> throw new UnknownLessonTypeException("The lesson type is not supported or recognized.");
 		}
 
 		Lesson savedLesson = lessonRepository.save(newLesson);
@@ -226,7 +225,7 @@ public class LessonServiceImpl implements LessonService {
 	@Transactional
 	public void updateLesson(UUID id, LessonUpdateRequest request) {
 		Lesson lesson = lessonRepository.findById(id)
-				.orElseThrow(() -> new LessonNotFoundException("Lesson not found for provided ID"));
+				.orElseThrow(() -> new EntryNotFoundException("The requested lesson could not be found."));
 
 		Lesson nextLesson = (request.getNextLessonId() != null)
 				? lessonRepository.findById(request.getNextLessonId()).orElse(null)
@@ -259,7 +258,7 @@ public class LessonServiceImpl implements LessonService {
 	@Override
 	public void deleteLesson(UUID id) {
 		Lesson lesson = lessonRepository.findById(id)
-				.orElseThrow(() -> new LessonNotFoundException("No lesson was found for the provided ID"));
+				.orElseThrow(() -> new EntryNotFoundException("The requested lesson could not be found."));
 
 		lessonRepository.delete(lesson);
 	}

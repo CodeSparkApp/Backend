@@ -5,6 +5,7 @@ import com.cloudinary.utils.ObjectUtils;
 import de.dhbw.tinf22b6.codespark.api.common.UserRoleType;
 import de.dhbw.tinf22b6.codespark.api.common.VerificationTokenType;
 import de.dhbw.tinf22b6.codespark.api.exception.AccountAlreadyExistsException;
+import de.dhbw.tinf22b6.codespark.api.exception.ExpiredVerificationTokenException;
 import de.dhbw.tinf22b6.codespark.api.exception.ImageUploadException;
 import de.dhbw.tinf22b6.codespark.api.exception.InvalidVerificationTokenException;
 import de.dhbw.tinf22b6.codespark.api.model.Account;
@@ -66,11 +67,11 @@ public class AccountServiceImpl implements AccountService {
 	@Override
 	public void createAccount(AccountCreateRequest request) {
 		if (accountRepository.findByEmail(request.getEmail()).isPresent()) {
-			throw new AccountAlreadyExistsException("An account with this email already exists");
+			throw new AccountAlreadyExistsException("An account with this email already exists.");
 		}
 
 		if (accountRepository.findByUsername(request.getUsername()).isPresent()) {
-			throw new AccountAlreadyExistsException("This username is already taken");
+			throw new AccountAlreadyExistsException("This username is already taken.");
 		}
 
 		String encodedPassword = passwordEncoder.encode(request.getPassword());
@@ -89,11 +90,11 @@ public class AccountServiceImpl implements AccountService {
 	public void verifyEmail(String token) {
 		VerificationToken verificationToken =
 				verificationTokenRepository.findByTokenAndType(token, VerificationTokenType.EMAIL_VERIFICATION)
-						.orElseThrow(() -> new InvalidVerificationTokenException("The verification link is invalid or has expired"));
+						.orElseThrow(() -> new InvalidVerificationTokenException("The verification link is invalid or has expired."));
 
 		if (verificationToken.isExpired()) {
-			// TODO
-			return;
+			verificationTokenRepository.delete(verificationToken);
+			throw new ExpiredVerificationTokenException("Your email verification link has expired. Please request a new one.");
 		}
 
 		Account account = verificationToken.getAccount();
@@ -108,7 +109,7 @@ public class AccountServiceImpl implements AccountService {
 	public void requestPasswordReset(RequestPasswordResetRequest request) {
 		Optional<Account> optionalAccount = accountRepository.findByEmail(request.getEmail());
 		if (optionalAccount.isEmpty()) {
-			// Don't notify client that account with this email exists
+			// Note: Don't notify client that account with this email exists
 			return;
 		}
 
@@ -125,11 +126,11 @@ public class AccountServiceImpl implements AccountService {
 	public void resetPassword(PasswordResetRequest request) {
 		VerificationToken verificationToken =
 				verificationTokenRepository.findByTokenAndType(request.getVerificationToken(), VerificationTokenType.PASSWORD_RESET)
-						.orElseThrow(() -> new InvalidVerificationTokenException("The verification link is invalid or has expired"));
+						.orElseThrow(() -> new InvalidVerificationTokenException("The verification link is invalid or has expired."));
 
 		if (verificationToken.isExpired()) {
-			// TODO
-			return;
+			verificationTokenRepository.delete(verificationToken);
+			throw new ExpiredVerificationTokenException("Your password reset link has expired. Please request a new one.");
 		}
 
 		Account account = verificationToken.getAccount();
@@ -153,7 +154,7 @@ public class AccountServiceImpl implements AccountService {
 		try {
 			uploadResult = cloudinary.uploader().upload(file.getBytes(), uploadOptions);
 		} catch (IOException e) {
-			throw new ImageUploadException("An error occurred while trying to upload the image");
+			throw new ImageUploadException("An error occurred while trying to upload the profile image.");
 		}
 		String imageUrl = uploadResult.get("secure_url").toString();
 

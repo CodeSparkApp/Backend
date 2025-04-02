@@ -1,7 +1,7 @@
 package de.dhbw.tinf22b6.codespark.api.service;
 
 import de.dhbw.tinf22b6.codespark.api.common.LessonProgressState;
-import de.dhbw.tinf22b6.codespark.api.exception.UnknownLessonTypeException;
+import de.dhbw.tinf22b6.codespark.api.exception.InvalidLessonSubmissionException;
 import de.dhbw.tinf22b6.codespark.api.model.*;
 import de.dhbw.tinf22b6.codespark.api.payload.request.*;
 import de.dhbw.tinf22b6.codespark.api.repository.UserLessonProgressRepository;
@@ -37,16 +37,27 @@ public class LessonEvaluationServiceImpl implements LessonEvaluationService {
 
 	@Override
 	public LessonEvaluationResult evaluateLesson(Lesson lesson, LessonSubmitRequest request, Account account) {
-		LessonEvaluationResult result = switch (lesson) {
-			case TheoryLesson ignored -> new LessonEvaluationResult(null, true);
-			case CodeAnalysisLesson codeAnalysisLesson -> handleCodeAnalysisLesson(codeAnalysisLesson, (CodeAnalysisLessonSubmitRequest) request);
-			case MultipleChoiceLesson multipleChoiceLesson -> handleMultipleChoiceLesson(multipleChoiceLesson, (MultipleChoiceLessonSubmitRequest) request);
-			case FillBlanksLesson fillBlanksLesson -> handleFillBlanksLesson(fillBlanksLesson, (FillBlanksLessonSubmitRequest) request);
-			case DebuggingLesson debuggingLesson -> handleDebuggingLesson(debuggingLesson, (DebuggingLessonSubmitRequest) request);
-			case ProgrammingLesson programmingLesson -> handleProgrammingLesson(programmingLesson, (ProgrammingLessonSubmitRequest) request);
-			default -> throw new UnknownLessonTypeException("Unexpected lesson type: " + lesson.getClass().getSimpleName());
-		};
-		// TODO: Handle casting exception
+		LessonEvaluationResult result;
+		try {
+			result = switch (lesson) {
+				case TheoryLesson ignored ->
+						new LessonEvaluationResult(null, true);
+				case CodeAnalysisLesson codeAnalysisLesson ->
+						handleCodeAnalysisLesson(codeAnalysisLesson, (CodeAnalysisLessonSubmitRequest) request);
+				case MultipleChoiceLesson multipleChoiceLesson ->
+						handleMultipleChoiceLesson(multipleChoiceLesson, (MultipleChoiceLessonSubmitRequest) request);
+				case FillBlanksLesson fillBlanksLesson ->
+						handleFillBlanksLesson(fillBlanksLesson, (FillBlanksLessonSubmitRequest) request);
+				case DebuggingLesson debuggingLesson ->
+						handleDebuggingLesson(debuggingLesson, (DebuggingLessonSubmitRequest) request);
+				case ProgrammingLesson programmingLesson ->
+						handleProgrammingLesson(programmingLesson, (ProgrammingLessonSubmitRequest) request);
+				default ->
+						throw new InvalidLessonSubmissionException("The submitted solution does not a known lesson type.");
+			};
+		} catch (ClassCastException e) {
+			throw new InvalidLessonSubmissionException("The submitted solution does not match the expected lesson type.");
+		}
 
 		UserLessonProgress progress = userLessonProgressRepository.findByAccountAndLesson(account, lesson)
 				.orElse(new UserLessonProgress(account, lesson, LessonProgressState.UNATTEMPTED));

@@ -1,8 +1,7 @@
 package de.dhbw.tinf22b6.codespark.api.service;
 
 import de.dhbw.tinf22b6.codespark.api.common.LessonProgressState;
-import de.dhbw.tinf22b6.codespark.api.exception.ChapterNotFoundException;
-import de.dhbw.tinf22b6.codespark.api.exception.LessonNotFoundException;
+import de.dhbw.tinf22b6.codespark.api.exception.EntryNotFoundException;
 import de.dhbw.tinf22b6.codespark.api.model.Account;
 import de.dhbw.tinf22b6.codespark.api.model.Chapter;
 import de.dhbw.tinf22b6.codespark.api.model.Lesson;
@@ -57,7 +56,7 @@ public class ChapterServiceImpl implements ChapterService {
 		Chapter firstChapter = allChapters.stream()
 				.filter(c -> !nextChapterIds.contains(c.getId()))
 				.findFirst()
-				.orElseThrow(() -> new ChapterNotFoundException("No starting chapter found"));
+				.orElseThrow(() -> new EntryNotFoundException("The specified first chapter could not be found."));
 
 		List<Chapter> sortedChapters = new ArrayList<>();
 		Chapter currentChapter = firstChapter;
@@ -87,7 +86,7 @@ public class ChapterServiceImpl implements ChapterService {
 	@Transactional
 	public LessonOverviewResponse getLessonOverview(UUID chapterId, Account account) {
 		Chapter chapter = chapterRepository.findById(chapterId)
-						.orElseThrow(() -> new ChapterNotFoundException("No chapter was found for the provided ID"));
+						.orElseThrow(() -> new EntryNotFoundException("The requested chapter could not be found."));
 
 		// TODO: Use views for the lesson sorting logic?
 		Lesson firstLesson = chapter.getFirstLesson();
@@ -129,12 +128,12 @@ public class ChapterServiceImpl implements ChapterService {
 	public void createChapter(ChapterCreateRequest request) {
 		Lesson firstLesson = (request.getFirstLessonId() != null)
 				? lessonRepository.findById(request.getFirstLessonId())
-				.orElseThrow(() -> new LessonNotFoundException("No lesson was found for the provided ID"))
+				.orElseThrow(() -> new EntryNotFoundException("The specified first lesson could not be found."))
 				: null;
 
 		Chapter nextChapter = (request.getNextChapterId() != null)
 				? chapterRepository.findById(request.getNextChapterId())
-				.orElseThrow(() -> new ChapterNotFoundException("No chapter was found for the provided ID"))
+				.orElseThrow(() -> new EntryNotFoundException("The specified next chapter could not be found."))
 				: null;
 
 		Chapter chapter = new Chapter(
@@ -153,7 +152,7 @@ public class ChapterServiceImpl implements ChapterService {
 	@Transactional
 	public void updateChapter(UUID id, ChapterUpdateRequest request) {
 		Chapter chapter = chapterRepository.findById(id)
-				.orElseThrow(() -> new ChapterNotFoundException("No chapter was found for the provided ID"));
+				.orElseThrow(() -> new EntryNotFoundException("The requested chapter could not be found."));
 
 		// Retrieve the new nextChapter (can be null)
 		Chapter nextChapter = (request.getNextChapterId() != null)
@@ -177,16 +176,14 @@ public class ChapterServiceImpl implements ChapterService {
 	@Override
 	public void deleteChapter(UUID id) {
 		Chapter chapter = chapterRepository.findById(id)
-				.orElseThrow(() -> new ChapterNotFoundException("No chapter was found for the provided ID"));
+				.orElseThrow(() -> new EntryNotFoundException("The requested chapter could not be found."));
 
 		chapterRepository.delete(chapter);
 	}
 
 	private void updateNextChapterReference(Chapter nextChapter, Chapter newChapter) {
 		if (nextChapter != null) {
-			Optional<Chapter> previousChapterOpt = chapterRepository.findByNextChapterId(nextChapter.getId());
-
-			previousChapterOpt.ifPresent(previousChapter -> {
+			chapterRepository.findByNextChapterId(nextChapter.getId()).ifPresent(previousChapter -> {
 				previousChapter.setNextChapter(newChapter);
 				chapterRepository.save(previousChapter);
 			});

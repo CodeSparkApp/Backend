@@ -22,21 +22,31 @@ public class GlobalExceptionHandler {
 		);
 	}
 
-	@ExceptionHandler(ChapterNotFoundException.class)
-	public ResponseEntity<ApiErrorResponse> handleChapterNotFoundException(ChapterNotFoundException e, WebRequest request) {
+	@ExceptionHandler(ChatStreamingException.class)
+	public ResponseEntity<ApiErrorResponse> handleChatStreamingException(ChatStreamingException e, WebRequest request) {
 		return createApiErrorResponse(
-				"Chapter Not Found",
+				"Chat Streaming Error",
+				HttpStatus.INTERNAL_SERVER_ERROR,
+				e.getMessage(),
+				request.getDescription(false)
+		);
+	}
+
+	@ExceptionHandler(EntryNotFoundException.class)
+	public ResponseEntity<ApiErrorResponse> handleEntryNotFoundException(EntryNotFoundException e, WebRequest request) {
+		return createApiErrorResponse(
+				"Entry Not Found",
 				HttpStatus.NOT_FOUND,
 				e.getMessage(),
 				request.getDescription(false)
 		);
 	}
 
-	@ExceptionHandler(ChatStreamingException.class)
-	public ResponseEntity<ApiErrorResponse> handleChatStreamingException(ChatStreamingException e, WebRequest request) {
+	@ExceptionHandler(ExpiredVerificationTokenException.class)
+	public ResponseEntity<ApiErrorResponse> handleExpiredVerificationTokenException(ExpiredVerificationTokenException e, WebRequest request) {
 		return createApiErrorResponse(
-				"Chat Streaming Error",
-				HttpStatus.INTERNAL_SERVER_ERROR,
+				"Expired Verification Token",
+				HttpStatus.FORBIDDEN,
 				e.getMessage(),
 				request.getDescription(false)
 		);
@@ -62,6 +72,16 @@ public class GlobalExceptionHandler {
 		);
 	}
 
+	@ExceptionHandler(InvalidLessonSubmissionException.class)
+	public ResponseEntity<ApiErrorResponse> handleInvalidLessonSubmissionException(InvalidLessonSubmissionException e, WebRequest request) {
+		return createApiErrorResponse(
+				"Invalid Lesson Submission",
+				HttpStatus.BAD_REQUEST,
+				e.getMessage(),
+				request.getDescription(false)
+		);
+	}
+
 	@ExceptionHandler(InvalidRefreshTokenException.class)
 	public ResponseEntity<ApiErrorResponse> handleInvalidRefreshTokenException(InvalidRefreshTokenException e, WebRequest request) {
 		return createApiErrorResponse(
@@ -77,16 +97,6 @@ public class GlobalExceptionHandler {
 		return createApiErrorResponse(
 				"Invalid Verification Token",
 				HttpStatus.BAD_REQUEST,
-				e.getMessage(),
-				request.getDescription(false)
-		);
-	}
-
-	@ExceptionHandler(LessonNotFoundException.class)
-	public ResponseEntity<ApiErrorResponse> handleLessonNotFoundException(LessonNotFoundException e, WebRequest request) {
-		return createApiErrorResponse(
-				"Lesson Not Found",
-				HttpStatus.NOT_FOUND,
 				e.getMessage(),
 				request.getDescription(false)
 		);
@@ -117,16 +127,6 @@ public class GlobalExceptionHandler {
 		return createApiErrorResponse(
 				"Unverified Account",
 				HttpStatus.FORBIDDEN,
-				e.getMessage(),
-				request.getDescription(false)
-		);
-	}
-
-	@ExceptionHandler(UserNotFoundException.class)
-	public ResponseEntity<ApiErrorResponse> handleUserNotFoundException(UserNotFoundException e, WebRequest request) {
-		return createApiErrorResponse(
-				"User Not Found",
-				HttpStatus.NOT_FOUND,
 				e.getMessage(),
 				request.getDescription(false)
 		);
