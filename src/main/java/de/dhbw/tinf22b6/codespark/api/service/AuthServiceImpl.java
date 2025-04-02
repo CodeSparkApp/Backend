@@ -32,14 +32,14 @@ public class AuthServiceImpl implements AuthService {
 	public TokenResponse loginAccount(LoginRequest request) {
 		Account account = accountRepository.findByUsername(request.getUsernameOrEmail())
 				.or(() -> accountRepository.findByEmail(request.getUsernameOrEmail()))
-				.orElseThrow(() -> new InvalidAccountCredentialsException("Invalid username or password"));
+				.orElseThrow(() -> new InvalidAccountCredentialsException("The username or password you entered is incorrect."));
 
 		if (!passwordEncoder.matches(request.getPassword(), account.getPassword())) {
-			throw new InvalidAccountCredentialsException("Invalid username or password");
+			throw new InvalidAccountCredentialsException("The username or password you entered is incorrect.");
 		}
 
 		if (!account.isVerified()) {
-			throw new UnverifiedAccountException("The current account is not verified");
+			throw new UnverifiedAccountException("Please verify your email before logging in.");
 		}
 
 		String accessToken = jwtUtil.generateAccessToken(account.getUsername(), account.getRole().name());
@@ -51,7 +51,7 @@ public class AuthServiceImpl implements AuthService {
 	@Override
 	public TokenResponse refreshAccessToken(RefreshTokenRequest request) {
 		if (!jwtUtil.validateToken(request.getRefreshToken())) {
-			throw new InvalidRefreshTokenException("The refresh token is invalid or has expired");
+			throw new InvalidRefreshTokenException("Your session has expired. Please log in again.");
 		}
 
 		String username = jwtUtil.extractUsername(request.getRefreshToken());

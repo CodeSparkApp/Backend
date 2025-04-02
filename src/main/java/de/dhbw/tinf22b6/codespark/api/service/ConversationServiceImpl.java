@@ -108,7 +108,7 @@ public class ConversationServiceImpl implements ConversationService {
 							// Append chunk to assistant response
 							response.append(messageChunk);
 						} catch (IOException e) {
-							throw new StreamWritingException("An error occurred while writing to the output stream");
+							throw new StreamWritingException("The response was unexpectedly cut off. Please try again in a moment.");
 						}
 					}
 				});
@@ -119,7 +119,7 @@ public class ConversationServiceImpl implements ConversationService {
 					conversationRepository.save(conversation);
 				}
 			} catch (Exception e) {
-				throw new ChatStreamingException("An error occurred while processing the streaming response");
+				throw new ChatStreamingException("Something went wrong while generating a response. Please try again in a moment.");
 			}
 		};
 	}

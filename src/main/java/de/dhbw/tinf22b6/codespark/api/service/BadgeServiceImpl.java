@@ -10,10 +10,7 @@ import de.dhbw.tinf22b6.codespark.api.payload.response.BadgeEarnResponse;
 import de.dhbw.tinf22b6.codespark.api.payload.response.BadgeItemResponse;
 import de.dhbw.tinf22b6.codespark.api.payload.response.BadgesOverviewResponse;
 import de.dhbw.tinf22b6.codespark.api.projection.ChapterProgressProjection;
-import de.dhbw.tinf22b6.codespark.api.repository.BadgeRepository;
-import de.dhbw.tinf22b6.codespark.api.repository.ChapterProgressRepository;
-import de.dhbw.tinf22b6.codespark.api.repository.UserBadgeRepository;
-import de.dhbw.tinf22b6.codespark.api.repository.UserLessonProgressRepository;
+import de.dhbw.tinf22b6.codespark.api.repository.*;
 import de.dhbw.tinf22b6.codespark.api.service.interfaces.BadgeService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
@@ -24,6 +21,9 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 @Service
@@ -33,24 +33,27 @@ public class BadgeServiceImpl implements BadgeService {
 	private final UserBadgeRepository userBadgeRepository;
 	private final UserLessonProgressRepository userLessonProgressRepository;
 	private final ChapterProgressRepository chapterProgressRepository;
+	private final ChapterRepository chapterRepository;
+
 	private final Object badgeLock = new Object();
 
 	public BadgeServiceImpl(@Autowired SimpMessagingTemplate messagingTemplate,
 							@Autowired BadgeRepository badgeRepository,
 							@Autowired UserBadgeRepository userBadgeRepository,
 							@Autowired UserLessonProgressRepository userLessonProgressRepository,
-							@Autowired ChapterProgressRepository chapterProgressRepository) {
+							@Autowired ChapterProgressRepository chapterProgressRepository,
+							@Autowired ChapterRepository chapterRepository) {
 		this.messagingTemplate = messagingTemplate;
 		this.badgeRepository = badgeRepository;
 		this.userBadgeRepository = userBadgeRepository;
 		this.userLessonProgressRepository = userLessonProgressRepository;
 		this.chapterProgressRepository = chapterProgressRepository;
+		this.chapterRepository = chapterRepository;
 	}
 
 	@Override
 	public BadgesOverviewResponse getBadgesOverview(Account account) {
 		List<Badge> badges = badgeRepository.findAll();
-		List<UserBadge> userBadges = userBadgeRepository.findAll();
 
 		BadgesOverviewResponse response = new BadgesOverviewResponse();
 		response.setBadges(
@@ -82,18 +85,23 @@ public class BadgeServiceImpl implements BadgeService {
 		List<Badge> earnedBadges = new ArrayList<>();
 
 		List<UserLessonProgress> completedLessons = userLessonProgressRepository.findByAccountAndState(account, LessonProgressState.SOLVED);
-		List<ChapterProgressProjection> chapterProgress = chapterProgressRepository.findProgressByAccountId(account.getId());
+		List<ChapterProgressProjection> chapterProgressList = chapterProgressRepository.findProgressByAccountId(account.getId());
 
 		assignBadgeIfEligible(earnedBadges, account, BadgeType.FIRST_LESSON_COMPLETED,
-				!completedLessons.isEmpty()
+				() -> !completedLessons.isEmpty()
 		);
 		assignBadgeIfEligible(earnedBadges, account, BadgeType.FIRST_CHAPTER_COMPLETED,
-				chapterProgress.stream()
-						.anyMatch(c -> c.getProgress() >= 1.0)
+				() -> chapterProgressList.stream()
+						.anyMatch(c -> c.getProgress() >= 1.0f)
 		);
 		assignBadgeIfEligible(earnedBadges, account, BadgeType.ALL_CHAPTERS_COMPLETED,
-				chapterProgress.stream()
-						.allMatch(c -> c.getProgress() >= 1.0)
+				() -> {
+					Map<UUID, Float> progressMap = chapterProgressList.stream()
+							.collect(Collectors.toMap(ChapterProgressProjection::getChapterId, ChapterProgressProjection::getProgress));
+
+					return chapterRepository.findAll().stream()
+							.allMatch(c -> progressMap.getOrDefault(c.getId(), 0.0f) >= 1.0f);
+				}
 		);
 
 		earnedBadges.stream()
@@ -105,8 +113,8 @@ public class BadgeServiceImpl implements BadgeService {
 				.forEach(b -> sendBadgeNotification(account, b));
 	}
 
-	private void assignBadgeIfEligible(List<Badge> earnedBadges, Account account, BadgeType badgeType, boolean conditionMet) {
-		if (!conditionMet) {
+	private void assignBadgeIfEligible(List<Badge> earnedBadges, Account account, BadgeType badgeType, Supplier<Boolean> condition) {
+		if (!condition.get()) {
 			return;
 		}
 

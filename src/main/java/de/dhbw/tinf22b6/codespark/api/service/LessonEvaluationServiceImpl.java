@@ -1,7 +1,7 @@
 package de.dhbw.tinf22b6.codespark.api.service;
 
 import de.dhbw.tinf22b6.codespark.api.common.LessonProgressState;
-import de.dhbw.tinf22b6.codespark.api.exception.UnknownLessonTypeException;
+import de.dhbw.tinf22b6.codespark.api.exception.InvalidLessonSubmissionException;
 import de.dhbw.tinf22b6.codespark.api.model.*;
 import de.dhbw.tinf22b6.codespark.api.payload.request.*;
 import de.dhbw.tinf22b6.codespark.api.repository.UserLessonProgressRepository;
@@ -17,6 +17,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Service
 public class LessonEvaluationServiceImpl implements LessonEvaluationService {
@@ -37,16 +38,27 @@ public class LessonEvaluationServiceImpl implements LessonEvaluationService {
 
 	@Override
 	public LessonEvaluationResult evaluateLesson(Lesson lesson, LessonSubmitRequest request, Account account) {
-		LessonEvaluationResult result = switch (lesson) {
-			case TheoryLesson ignored -> new LessonEvaluationResult(null, true);
-			case CodeAnalysisLesson codeAnalysisLesson -> handleCodeAnalysisLesson(codeAnalysisLesson, (CodeAnalysisLessonSubmitRequest) request);
-			case MultipleChoiceLesson multipleChoiceLesson -> handleMultipleChoiceLesson(multipleChoiceLesson, (MultipleChoiceLessonSubmitRequest) request);
-			case FillBlanksLesson fillBlanksLesson -> handleFillBlanksLesson(fillBlanksLesson, (FillBlanksLessonSubmitRequest) request);
-			case DebuggingLesson debuggingLesson -> handleDebuggingLesson(debuggingLesson, (DebuggingLessonSubmitRequest) request);
-			case ProgrammingLesson programmingLesson -> handleProgrammingLesson(programmingLesson, (ProgrammingLessonSubmitRequest) request);
-			default -> throw new UnknownLessonTypeException("Unexpected lesson type: " + lesson.getClass().getSimpleName());
-		};
-		// TODO: Handle casting exception
+		LessonEvaluationResult result;
+		try {
+			result = switch (lesson) {
+				case TheoryLesson ignored ->
+						new LessonEvaluationResult(null, true);
+				case CodeAnalysisLesson codeAnalysisLesson ->
+						handleCodeAnalysisLesson(codeAnalysisLesson, (CodeAnalysisLessonSubmitRequest) request);
+				case MultipleChoiceLesson multipleChoiceLesson ->
+						handleMultipleChoiceLesson(multipleChoiceLesson, (MultipleChoiceLessonSubmitRequest) request);
+				case FillBlanksLesson fillBlanksLesson ->
+						handleFillBlanksLesson(fillBlanksLesson, (FillBlanksLessonSubmitRequest) request);
+				case DebuggingLesson debuggingLesson ->
+						handleDebuggingLesson(debuggingLesson, (DebuggingLessonSubmitRequest) request);
+				case ProgrammingLesson programmingLesson ->
+						handleProgrammingLesson(programmingLesson, (ProgrammingLessonSubmitRequest) request);
+				default ->
+						throw new InvalidLessonSubmissionException("The submitted solution does not a known lesson type.");
+			};
+		} catch (ClassCastException e) {
+			throw new InvalidLessonSubmissionException("The submitted solution does not match the expected lesson type.");
+		}
 
 		UserLessonProgress progress = userLessonProgressRepository.findByAccountAndLesson(account, lesson)
 				.orElse(new UserLessonProgress(account, lesson, LessonProgressState.UNATTEMPTED));
@@ -82,17 +94,39 @@ public class LessonEvaluationServiceImpl implements LessonEvaluationService {
 	}
 
 	private LessonEvaluationResult handleMultipleChoiceLesson(MultipleChoiceLesson multipleChoiceLesson, MultipleChoiceLessonSubmitRequest request) {
-		return new LessonEvaluationResult(
-				null,
-				new HashSet<>(request.getSolutions()).containsAll(multipleChoiceLesson.getSolutions())
+		Set<Integer> expected = new HashSet<>(multipleChoiceLesson.getSolutions());
+		Set<Integer> submitted = new HashSet<>(request.getSolutions());
+
+		boolean isCorrect = submitted.equals(expected);
+
+		String explanationPrompt = promptBuilderService.buildPromptForMultipleChoiceEvaluation(
+				multipleChoiceLesson.getQuestion(),
+				multipleChoiceLesson.getOptions(),
+				multipleChoiceLesson.getSolutions(),
+				request.getSolutions(),
+				isCorrect
 		);
+		String explanation = evaluateExplanationOnly(explanationPrompt);
+
+		return new LessonEvaluationResult(explanation, isCorrect);
 	}
 
 	private LessonEvaluationResult handleFillBlanksLesson(FillBlanksLesson fillBlanksLesson, FillBlanksLessonSubmitRequest request) {
-		return new LessonEvaluationResult(
-				null,
-				new HashSet<>(request.getSolutions()).containsAll(fillBlanksLesson.getSolutions())
+		Set<String> expected = new HashSet<>(fillBlanksLesson.getSolutions());
+		Set<String> submitted = new HashSet<>(request.getSolutions());
+
+		boolean isCorrect = submitted.equals(expected);
+
+		String explanationPrompt = promptBuilderService.buildPromptForFillBlanksEvaluation(
+				fillBlanksLesson.getTemplateCode(),
+				fillBlanksLesson.getExpectedOutput(),
+				fillBlanksLesson.getSolutions(),
+				request.getSolutions(),
+				isCorrect
 		);
+		String explanation = evaluateExplanationOnly(explanationPrompt);
+
+		return new LessonEvaluationResult(explanation, isCorrect);
 	}
 
 	private LessonEvaluationResult handleDebuggingLesson(DebuggingLesson debuggingLesson, DebuggingLessonSubmitRequest request) {
@@ -136,5 +170,18 @@ public class LessonEvaluationServiceImpl implements LessonEvaluationService {
 		boolean isCorrect = finalLine.equalsIgnoreCase("###true");
 
 		return new LessonEvaluationResult(explanation, isCorrect);
+	}
+
+	private String evaluateExplanationOnly(String prompt) {
+		String result = simpleOpenAI.chatCompletions()
+				.create(ChatRequest.builder()
+						.model(env.getRequiredProperty("openai.model.name"))
+						.messages(List.of(ChatMessage.UserMessage.of(prompt)))
+						.temperature(0.3)
+						.build())
+				.join()
+				.firstContent();
+
+		return result.strip();
 	}
 }
