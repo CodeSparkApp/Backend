@@ -11,6 +11,7 @@ import de.dhbw.tinf22b6.codespark.api.payload.request.LessonUpdateRequest;
 import de.dhbw.tinf22b6.codespark.api.payload.response.*;
 import de.dhbw.tinf22b6.codespark.api.repository.ChapterRepository;
 import de.dhbw.tinf22b6.codespark.api.repository.LessonRepository;
+import de.dhbw.tinf22b6.codespark.api.service.dto.LessonEvaluationResult;
 import de.dhbw.tinf22b6.codespark.api.service.interfaces.LessonEvaluationService;
 import de.dhbw.tinf22b6.codespark.api.service.interfaces.LessonService;
 import jakarta.transaction.Transactional;
@@ -102,17 +103,17 @@ public class LessonServiceImpl implements LessonService {
 		Lesson lesson = lessonRepository.findById(id)
 				.orElseThrow(() -> new LessonNotFoundException("No lesson was found for the provided ID"));
 
-		boolean isCorrect = lessonEvaluationService.evaluateLesson(lesson, request, account);
-		if (!isCorrect) {
-			return new LessonSubmitResponse(LessonEvaluationState.INCORRECT, null);
+		LessonEvaluationResult result = lessonEvaluationService.evaluateLesson(lesson, request, account);
+		if (!result.isCorrect()) {
+			return new LessonSubmitResponse(LessonEvaluationState.INCORRECT, result.getExplanation(), null);
 		}
 
 		Lesson nextLesson = lesson.getNextLesson();
 		if (nextLesson != null) {
-			return new LessonSubmitResponse(LessonEvaluationState.CORRECT, nextLesson.getId());
+			return new LessonSubmitResponse(LessonEvaluationState.CORRECT, result.getExplanation(), nextLesson.getId());
 		}
 
-		return new LessonSubmitResponse(LessonEvaluationState.CHAPTER_COMPLETE_SOLVED, null);
+		return new LessonSubmitResponse(LessonEvaluationState.CHAPTER_COMPLETE_SOLVED, result.getExplanation(), null);
 	}
 
 	@Override
@@ -124,10 +125,10 @@ public class LessonServiceImpl implements LessonService {
 
 		Lesson nextLesson = lesson.getNextLesson();
 		if (nextLesson != null) {
-			return new LessonSubmitResponse(LessonEvaluationState.SKIPPED, nextLesson.getId());
+			return new LessonSubmitResponse(LessonEvaluationState.SKIPPED, null, nextLesson.getId());
 		}
 
-		return new LessonSubmitResponse(LessonEvaluationState.CHAPTER_COMPLETE_SKIPPED, null);
+		return new LessonSubmitResponse(LessonEvaluationState.CHAPTER_COMPLETE_SKIPPED, null, null);
 	}
 
 	@Override

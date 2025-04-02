@@ -5,29 +5,40 @@ import de.dhbw.tinf22b6.codespark.api.exception.UnknownLessonTypeException;
 import de.dhbw.tinf22b6.codespark.api.model.*;
 import de.dhbw.tinf22b6.codespark.api.payload.request.*;
 import de.dhbw.tinf22b6.codespark.api.repository.UserLessonProgressRepository;
+import de.dhbw.tinf22b6.codespark.api.service.dto.LessonEvaluationResult;
 import de.dhbw.tinf22b6.codespark.api.service.interfaces.LessonEvaluationService;
+import de.dhbw.tinf22b6.codespark.api.service.interfaces.PromptBuilderService;
 import io.github.sashirestela.openai.SimpleOpenAI;
+import io.github.sashirestela.openai.domain.chat.ChatMessage;
+import io.github.sashirestela.openai.domain.chat.ChatRequest;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
 
 import java.util.HashSet;
-import java.util.Objects;
+import java.util.List;
 
 @Service
 public class LessonEvaluationServiceImpl implements LessonEvaluationService {
 	private final UserLessonProgressRepository userLessonProgressRepository;
+	private final PromptBuilderService promptBuilderService;
 	private final SimpleOpenAI simpleOpenAI;
+	private final Environment env;
 
 	public LessonEvaluationServiceImpl(@Autowired UserLessonProgressRepository userLessonProgressRepository,
-									   @Autowired SimpleOpenAI simpleOpenAI) {
+									   @Autowired PromptBuilderService promptBuilderService,
+									   @Autowired SimpleOpenAI simpleOpenAI,
+									   @Autowired Environment env) {
 		this.userLessonProgressRepository = userLessonProgressRepository;
+		this.promptBuilderService = promptBuilderService;
 		this.simpleOpenAI = simpleOpenAI;
+		this.env = env;
 	}
 
 	@Override
-	public boolean evaluateLesson(Lesson lesson, LessonSubmitRequest request, Account account) {
-		boolean isCorrect = switch (lesson) {
-			case TheoryLesson ignored -> true;
+	public LessonEvaluationResult evaluateLesson(Lesson lesson, LessonSubmitRequest request, Account account) {
+		LessonEvaluationResult result = switch (lesson) {
+			case TheoryLesson ignored -> new LessonEvaluationResult(null, true);
 			case CodeAnalysisLesson codeAnalysisLesson -> handleCodeAnalysisLesson(codeAnalysisLesson, (CodeAnalysisLessonSubmitRequest) request);
 			case MultipleChoiceLesson multipleChoiceLesson -> handleMultipleChoiceLesson(multipleChoiceLesson, (MultipleChoiceLessonSubmitRequest) request);
 			case FillBlanksLesson fillBlanksLesson -> handleFillBlanksLesson(fillBlanksLesson, (FillBlanksLessonSubmitRequest) request);
@@ -41,12 +52,12 @@ public class LessonEvaluationServiceImpl implements LessonEvaluationService {
 				.orElse(new UserLessonProgress(account, lesson, LessonProgressState.UNATTEMPTED));
 
 		if (progress.getState() != LessonProgressState.SOLVED) {
-			progress.setState(isCorrect ? LessonProgressState.SOLVED : LessonProgressState.ATTEMPTED);
+			progress.setState(result.isCorrect() ? LessonProgressState.SOLVED : LessonProgressState.ATTEMPTED);
 		}
 
 		userLessonProgressRepository.save(progress);
 
-		return isCorrect;
+		return result;
 	}
 
 	@Override
@@ -61,23 +72,69 @@ public class LessonEvaluationServiceImpl implements LessonEvaluationService {
 		userLessonProgressRepository.save(progress);
 	}
 
-	private boolean handleCodeAnalysisLesson(CodeAnalysisLesson codeAnalysisLesson, CodeAnalysisLessonSubmitRequest request) {
-		return Objects.equals(request.getSolution(), codeAnalysisLesson.getSampleSolution());
+	private LessonEvaluationResult handleCodeAnalysisLesson(CodeAnalysisLesson codeAnalysisLesson, CodeAnalysisLessonSubmitRequest request) {
+		String prompt = promptBuilderService.buildPromptForCodeAnalysis(
+				codeAnalysisLesson.getQuestion(),
+				codeAnalysisLesson.getSampleSolution(),
+				request.getSolution()
+		);
+		return evaluateWithAI(prompt);
 	}
 
-	private boolean handleMultipleChoiceLesson(MultipleChoiceLesson multipleChoiceLesson, MultipleChoiceLessonSubmitRequest request) {
-		return new HashSet<>(request.getSolutions()).containsAll(multipleChoiceLesson.getSolutions());
+	private LessonEvaluationResult handleMultipleChoiceLesson(MultipleChoiceLesson multipleChoiceLesson, MultipleChoiceLessonSubmitRequest request) {
+		return new LessonEvaluationResult(
+				null,
+				new HashSet<>(request.getSolutions()).containsAll(multipleChoiceLesson.getSolutions())
+		);
 	}
 
-	private boolean handleFillBlanksLesson(FillBlanksLesson fillBlanksLesson, FillBlanksLessonSubmitRequest request) {
-		return new HashSet<>(request.getSolutions()).containsAll(fillBlanksLesson.getSolutions());
+	private LessonEvaluationResult handleFillBlanksLesson(FillBlanksLesson fillBlanksLesson, FillBlanksLessonSubmitRequest request) {
+		return new LessonEvaluationResult(
+				null,
+				new HashSet<>(request.getSolutions()).containsAll(fillBlanksLesson.getSolutions())
+		);
 	}
 
-	private boolean handleDebuggingLesson(DebuggingLesson debuggingLesson, DebuggingLessonSubmitRequest request) {
-		return Objects.equals(request.getSolution(), debuggingLesson.getSampleSolution());
+	private LessonEvaluationResult handleDebuggingLesson(DebuggingLesson debuggingLesson, DebuggingLessonSubmitRequest request) {
+		String prompt = promptBuilderService.buildPromptForDebuggingLesson(
+				debuggingLesson.getFaultyCode(),
+				debuggingLesson.getExpectedOutput(),
+				debuggingLesson.getSampleSolution(),
+				request.getSolution()
+		);
+		return evaluateWithAI(prompt);
 	}
 
-	private boolean handleProgrammingLesson(ProgrammingLesson programmingLesson, ProgrammingLessonSubmitRequest request) {
-		return Objects.equals(request.getSolution(), programmingLesson.getSampleSolution());
+	private LessonEvaluationResult handleProgrammingLesson(ProgrammingLesson programmingLesson, ProgrammingLessonSubmitRequest request) {
+		String prompt = promptBuilderService.buildPromptForProgramming(
+				programmingLesson.getProblem(),
+				programmingLesson.getSampleSolution(),
+				request.getSolution()
+		);
+		return evaluateWithAI(prompt);
+	}
+
+	private LessonEvaluationResult evaluateWithAI(String prompt) {
+		String result = simpleOpenAI.chatCompletions()
+				.create(ChatRequest.builder()
+						.model(env.getRequiredProperty("openai.model.name"))
+						.messages(List.of(ChatMessage.UserMessage.of(prompt)))
+						.temperature(0.3)
+						.build())
+				.join()
+				.firstContent();
+
+		// Extract final ###true or ###false
+		// TODO: Maybe try sending prompt again instead?
+		String finalLine = result.strip().lines()
+				.map(String::trim)
+				.filter(line -> line.startsWith("###"))
+				.findFirst()
+				.orElse("###false");
+
+		String explanation = result.strip().replace(finalLine, "").strip();
+		boolean isCorrect = finalLine.equalsIgnoreCase("###true");
+
+		return new LessonEvaluationResult(explanation, isCorrect);
 	}
 }
