@@ -5,7 +5,6 @@ import de.dhbw.tinf22b6.codespark.api.payload.request.RefreshTokenRequest;
 import de.dhbw.tinf22b6.codespark.api.payload.response.TokenResponse;
 import de.dhbw.tinf22b6.codespark.api.service.interfaces.AuthService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -30,8 +29,6 @@ public class AuthController {
 	@PostMapping("/refresh")
 	public ResponseEntity<TokenResponse> refreshAccessToken(@RequestBody RefreshTokenRequest request) {
 		TokenResponse response = authService.refreshAccessToken(request);
-		return response != null
-				? ResponseEntity.ok().body(response)
-				: ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+		return ResponseEntity.ok().body(response);
 	}
 }
