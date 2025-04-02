@@ -98,7 +98,17 @@ public class LessonEvaluationServiceImpl implements LessonEvaluationService {
 		Set<Integer> submitted = new HashSet<>(request.getSolutions());
 
 		boolean isCorrect = submitted.equals(expected);
-		return new LessonEvaluationResult(null, isCorrect);
+
+		String explanationPrompt = promptBuilderService.buildPromptForMultipleChoiceEvaluation(
+				multipleChoiceLesson.getQuestion(),
+				multipleChoiceLesson.getOptions(),
+				multipleChoiceLesson.getSolutions(),
+				request.getSolutions(),
+				isCorrect
+		);
+		String explanation = evaluateExplanationOnly(explanationPrompt);
+
+		return new LessonEvaluationResult(explanation, isCorrect);
 	}
 
 	private LessonEvaluationResult handleFillBlanksLesson(FillBlanksLesson fillBlanksLesson, FillBlanksLessonSubmitRequest request) {
@@ -106,7 +116,17 @@ public class LessonEvaluationServiceImpl implements LessonEvaluationService {
 		Set<String> submitted = new HashSet<>(request.getSolutions());
 
 		boolean isCorrect = submitted.equals(expected);
-		return new LessonEvaluationResult(null, isCorrect);
+
+		String explanationPrompt = promptBuilderService.buildPromptForFillBlanksEvaluation(
+				fillBlanksLesson.getTemplateCode(),
+				fillBlanksLesson.getExpectedOutput(),
+				fillBlanksLesson.getSolutions(),
+				request.getSolutions(),
+				isCorrect
+		);
+		String explanation = evaluateExplanationOnly(explanationPrompt);
+
+		return new LessonEvaluationResult(explanation, isCorrect);
 	}
 
 	private LessonEvaluationResult handleDebuggingLesson(DebuggingLesson debuggingLesson, DebuggingLessonSubmitRequest request) {
@@ -150,5 +170,18 @@ public class LessonEvaluationServiceImpl implements LessonEvaluationService {
 		boolean isCorrect = finalLine.equalsIgnoreCase("###true");
 
 		return new LessonEvaluationResult(explanation, isCorrect);
+	}
+
+	private String evaluateExplanationOnly(String prompt) {
+		String result = simpleOpenAI.chatCompletions()
+				.create(ChatRequest.builder()
+						.model(env.getRequiredProperty("openai.model.name"))
+						.messages(List.of(ChatMessage.UserMessage.of(prompt)))
+						.temperature(0.3)
+						.build())
+				.join()
+				.firstContent();
+
+		return result.strip();
 	}
 }
