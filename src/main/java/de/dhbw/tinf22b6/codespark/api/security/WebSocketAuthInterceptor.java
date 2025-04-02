@@ -45,13 +45,11 @@ public class WebSocketAuthInterceptor implements ChannelInterceptor {
 		String token = authorizationValue.replace("Bearer ", "");
 		if (jwtUtil.validateToken(token)) {
 			String username = jwtUtil.extractUsername(token);
-			String role = jwtUtil.extractRole(token);
-
 			Account account = accountRepository.findByUsername(username)
 					.orElseThrow(() -> new UsernameNotFoundException("Username not found"));
 
 			UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
-					account.getUsername(), null, Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + role))
+					account.getUsername(), null, Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + account.getRole().name()))
 			);
 
 			SecurityContextHolder.getContext().setAuthentication(authToken);

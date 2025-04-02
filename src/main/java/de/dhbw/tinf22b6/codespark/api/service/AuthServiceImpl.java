@@ -42,7 +42,7 @@ public class AuthServiceImpl implements AuthService {
 			throw new UnverifiedAccountException("Please verify your email before logging in.");
 		}
 
-		String accessToken = jwtUtil.generateAccessToken(account.getUsername(), account.getRole().name());
+		String accessToken = jwtUtil.generateAccessToken(account.getUsername());
 		String refreshToken = jwtUtil.generateRefreshToken(account.getUsername());
 
 		return new TokenResponse(accessToken, refreshToken);
@@ -55,8 +55,7 @@ public class AuthServiceImpl implements AuthService {
 		}
 
 		String username = jwtUtil.extractUsername(request.getRefreshToken());
-		String role = jwtUtil.extractRole(request.getRefreshToken());
-		String newAccessToken = jwtUtil.generateAccessToken(username, role);
+		String newAccessToken = jwtUtil.generateAccessToken(username);
 		return new TokenResponse(newAccessToken, request.getRefreshToken());
 	}
 }

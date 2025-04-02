@@ -21,10 +21,9 @@ public class JwtUtil {
 		this.key = Keys.hmacShaKeyFor(Decoders.BASE64.decode(env.getRequiredProperty("auth.jwt.secret")));
 	}
 
-	public String generateAccessToken(String username, String role) {
+	public String generateAccessToken(String username) {
 		return Jwts.builder()
 				.subject(username)
-				.claim("role", role)
 				.issuedAt(new Date())
 				.expiration(new Date(System.currentTimeMillis() + env.getRequiredProperty("auth.jwt.access-token-expiration", Long.class)))
 				.signWith(key)
@@ -47,15 +46,6 @@ public class JwtUtil {
 				.parseSignedClaims(token)
 				.getPayload()
 				.getSubject();
-	}
-
-	public String extractRole(String token) {
-		return Jwts.parser()
-				.verifyWith(key)
-				.build()
-				.parseSignedClaims(token)
-				.getPayload()
-				.get("role", String.class);
 	}
 
 	public boolean validateToken(String token) {
