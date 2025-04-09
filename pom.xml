@@ -9,7 +9,7 @@
 	</parent>
 
 	<groupId>de.dhbw.tinf22b6</groupId>
-	<artifactId>codespark</artifactId>
+	<artifactId>codespark-backend</artifactId>
 	<version>0.1.0</version>
 	<name>CodeSpark</name>
 	<description>CodeSpark - Gamified Java Coding Challenges with Real-Time AI Assistance</description>
