@@ -4,4 +4,4 @@ spring:
       ddl-auto: none
 
 app:
-  base-url: "https://codespark.up.railway.app"
+  base-url: "https://codespark-api.up.railway.app"
