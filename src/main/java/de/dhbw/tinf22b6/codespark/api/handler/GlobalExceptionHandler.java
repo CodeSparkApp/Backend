@@ -1,4 +1,4 @@
-package de.dhbw.tinf22b6.codespark.api.controller;
+package de.dhbw.tinf22b6.codespark.api.handler;
 
 import de.dhbw.tinf22b6.codespark.api.exception.*;
 import de.dhbw.tinf22b6.codespark.api.payload.response.ApiErrorResponse;
