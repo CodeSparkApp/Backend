@@ -29,4 +29,3 @@ public class UserBadgeId implements Serializable {
 		return Objects.hash(accountId, badgeId);
 	}
 }
-
