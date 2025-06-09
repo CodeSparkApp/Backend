@@ -134,4 +134,3 @@ public class BadgeServiceImpl implements BadgeService {
 		messagingTemplate.convertAndSendToUser(account.getUsername(), "/queue/badges", response);
 	}
 }
-
