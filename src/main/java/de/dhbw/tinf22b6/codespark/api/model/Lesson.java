@@ -24,7 +24,7 @@ public abstract class Lesson {
 	@Column(columnDefinition = "TEXT", nullable = false)
 	private String description;
 
-	@Column(nullable = false, insertable = false, updatable = false)
+	@Column(nullable = false)
 	@Enumerated(EnumType.STRING)
 	private LessonType type;
 
