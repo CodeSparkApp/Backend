@@ -27,6 +27,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
@@ -63,7 +64,8 @@ class AccountServiceImplTests {
 
 	@Test
 	void getAccountDetails_shouldReturnCorrectResponse() {
-		Account account = new Account("user", "user@example.com", "pass", UserRoleType.USER, true);
+		Account account = new Account("user", "user@example.com", "pass",
+				UserRoleType.USER, true, LocalDateTime.now(), LocalDateTime.now());
 		account.setId(UUID.randomUUID());
 		account.setProfileImageUrl("http://image.url");
 

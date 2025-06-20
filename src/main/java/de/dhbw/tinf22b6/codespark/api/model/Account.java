@@ -6,6 +6,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -46,11 +47,20 @@ public class Account {
 	@OneToOne(mappedBy = "account", cascade = CascadeType.ALL, orphanRemoval = true)
 	private ExamDate examDate;
 
-	public Account(String username, String email, String password, UserRoleType role, boolean verified) {
+	@Column(nullable = false, updatable = false)
+	private LocalDateTime creationDate;
+
+	@Column(nullable = false)
+	private LocalDateTime lastLogin;
+
+	public Account(String username, String email, String password, UserRoleType role, boolean verified,
+				   LocalDateTime creationDate, LocalDateTime lastLogin) {
 		this.username = username;
 		this.email = email;
 		this.password = password;
 		this.role = role;
 		this.verified = verified;
+		this.creationDate = creationDate;
+		this.lastLogin = lastLogin;
 	}
 }

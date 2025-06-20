@@ -24,6 +24,7 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -61,7 +62,8 @@ class AccountControllerTests {
 				UUID.fromString("e6c9f025-33ea-4b92-a114-6b6ee6c47d36"),
 				"user",
 				"email@example.com",
-				"https://photos.com/user-profile-photo"
+				"https://photos.com/user-profile-photo",
+				LocalDateTime.of(2022, 1, 1, 12, 0)
 		);
 		Mockito.when(accountService.getAccountDetails(any())).thenReturn(mockResponse);
 
@@ -70,7 +72,8 @@ class AccountControllerTests {
 				.andExpect(jsonPath("$.id").value("e6c9f025-33ea-4b92-a114-6b6ee6c47d36"))
 				.andExpect(jsonPath("$.username").value("user"))
 				.andExpect(jsonPath("$.email").value("email@example.com"))
-				.andExpect(jsonPath("$.profile_image_url").value("https://photos.com/user-profile-photo"));
+				.andExpect(jsonPath("$.profile_image_url").value("https://photos.com/user-profile-photo"))
+				.andExpect(jsonPath("$.creation_date").value(LocalDateTime.of(2022, 1, 1, 12, 0)));
 	}
 
 	@Test
