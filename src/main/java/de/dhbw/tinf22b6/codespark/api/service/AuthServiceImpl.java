@@ -14,6 +14,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+
 @Service
 public class AuthServiceImpl implements AuthService {
 	private final AccountRepository accountRepository;
@@ -45,6 +48,9 @@ public class AuthServiceImpl implements AuthService {
 		String accessToken = jwtUtil.generateAccessToken(account.getUsername());
 		String refreshToken = jwtUtil.generateRefreshToken(account.getUsername());
 
+		account.setLastLogin(LocalDateTime.now(ZoneOffset.UTC));
+		accountRepository.save(account);
+
 		return new TokenResponse(accessToken, refreshToken);
 	}
 
@@ -55,7 +61,14 @@ public class AuthServiceImpl implements AuthService {
 		}
 
 		String username = jwtUtil.extractUsername(request.getRefreshToken());
+		Account account = accountRepository.findByUsername(username)
+				.orElseThrow(() -> new InvalidAccountCredentialsException("No account with username " + username + "was found."));
+
 		String newAccessToken = jwtUtil.generateAccessToken(username);
+
+		account.setLastLogin(LocalDateTime.now(ZoneOffset.UTC));
+		accountRepository.save(account);
+
 		return new TokenResponse(newAccessToken, request.getRefreshToken());
 	}
 }

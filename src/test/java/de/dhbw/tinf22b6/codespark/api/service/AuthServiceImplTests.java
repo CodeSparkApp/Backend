@@ -100,10 +100,15 @@ class AuthServiceImplTests {
 	@Test
 	void refreshAccessToken_shouldReturnNewAccessToken_whenValid() {
 		RefreshTokenRequest request = new RefreshTokenRequest("refresh-token");
+		Account account = new Account();
+		account.setUsername("testuser");
+		account.setPassword("encoded");
+		account.setVerified(false);
 
 		when(jwtUtil.validateToken("refresh-token")).thenReturn(true);
 		when(jwtUtil.extractUsername("refresh-token")).thenReturn("testuser");
 		when(jwtUtil.generateAccessToken("testuser")).thenReturn("new-access-token");
+		when(accountRepository.findByUsername("testuser")).thenReturn(Optional.of(account));
 
 		TokenResponse response = authService.refreshAccessToken(request);
 

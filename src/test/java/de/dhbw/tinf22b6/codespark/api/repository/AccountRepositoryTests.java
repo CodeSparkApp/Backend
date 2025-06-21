@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.test.context.ActiveProfiles;
 
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -19,7 +20,8 @@ class AccountRepositoryTests {
 
 	@Test
 	void testFindByUsername_shouldReturnAccount() {
-		Account account = new Account("john_doe", "john@example.com", "hashed_pwd", UserRoleType.USER, true);
+		Account account = new Account("john_doe", "john@example.com", "hashed_pwd",
+				UserRoleType.USER, true, LocalDateTime.now(), LocalDateTime.now());
 		accountRepository.save(account);
 
 		Optional<Account> result = accountRepository.findByUsername("john_doe");
@@ -30,7 +32,8 @@ class AccountRepositoryTests {
 
 	@Test
 	void findByEmail_shouldReturnAccount() {
-		Account account = new Account("jane_doe", "jane@example.com", "hashed_pwd", UserRoleType.USER, false);
+		Account account = new Account("jane_doe", "jane@example.com", "hashed_pwd",
+				UserRoleType.USER, false, LocalDateTime.now(), LocalDateTime.now());
 		accountRepository.save(account);
 
 		Optional<Account> result = accountRepository.findByEmail("jane@example.com");

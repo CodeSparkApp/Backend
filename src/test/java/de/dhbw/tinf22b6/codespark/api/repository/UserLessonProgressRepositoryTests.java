@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.test.context.ActiveProfiles;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -34,10 +35,11 @@ class UserLessonProgressRepositoryTests {
 
 	@Test
 	void testFindByAccountAndLesson_shouldReturnProgress() {
-		Account account = accountRepository.save(new Account("testUser", "user@example.com", "pw", UserRoleType.USER, true));
+		Account account = accountRepository.save(new Account("testUser", "user@example.com", "pw", UserRoleType.USER,
+				true, LocalDateTime.now(),  LocalDateTime.now()));
 		Chapter chapter = chapterRepository.save(new Chapter("Chapter 1", "Intro", null, null));
 
-		TheoryLesson lesson = lessonRepository.save(new TheoryLesson("L1", "Theory", LessonType.THEORY, chapter, null, null, "Sample text"));
+		TheoryLesson lesson = lessonRepository.save(new TheoryLesson("L1", "Theory", LessonType.THEORY,chapter, null, null, "Sample text"));
 		progressRepository.save(new UserLessonProgress(account, lesson, LessonProgressState.ATTEMPTED));
 
 		Optional<UserLessonProgress> result = progressRepository.findByAccountAndLesson(account, lesson);
@@ -48,7 +50,8 @@ class UserLessonProgressRepositoryTests {
 
 	@Test
 	void testFindByAccountAndState_shouldReturnCorrectList() {
-		Account account = accountRepository.save(new Account("testUser2", "user2@example.com", "pw", UserRoleType.USER, true));
+		Account account = accountRepository.save(new Account("testUser2", "user2@example.com", "pw", UserRoleType.USER,
+				true, LocalDateTime.now(),  LocalDateTime.now()));
 		Chapter chapter = chapterRepository.save(new Chapter("Chapter 2", "Intro 2", null, null));
 
 		TheoryLesson lesson1 = lessonRepository.save(new TheoryLesson("L2", "Theory 2", LessonType.THEORY, chapter, null, null, "Text 1"));
@@ -65,7 +68,8 @@ class UserLessonProgressRepositoryTests {
 
 	@Test
 	void testFindByAccountAndLesson_shouldReturnEmptyWhenNone() {
-		Account account = accountRepository.save(new Account("user3", "user3@example.com", "pw", UserRoleType.USER, true));
+		Account account = accountRepository.save(new Account("user3", "user3@example.com", "pw", UserRoleType.USER,
+				true, LocalDateTime.now(),  LocalDateTime.now()));
 		Chapter chapter = chapterRepository.save(new Chapter("Chapter X", "X", null, null));
 		TheoryLesson lesson = lessonRepository.save(new TheoryLesson("L4", "No progress", LessonType.THEORY, chapter, null, null, "Empty"));
 

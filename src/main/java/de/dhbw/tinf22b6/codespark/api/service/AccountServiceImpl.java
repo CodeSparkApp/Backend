@@ -27,6 +27,8 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
@@ -60,7 +62,8 @@ public class AccountServiceImpl implements AccountService {
 				account.getId(),
 				account.getUsername(),
 				account.getEmail(),
-				account.getProfileImageUrl()
+				account.getProfileImageUrl(),
+				account.getCreationDate()
 		);
 	}
 
@@ -75,7 +78,9 @@ public class AccountServiceImpl implements AccountService {
 		}
 
 		String encodedPassword = passwordEncoder.encode(request.getPassword());
-		Account account = new Account(request.getUsername(), request.getEmail(), encodedPassword, UserRoleType.USER, false);
+		LocalDateTime now = LocalDateTime.now(ZoneOffset.UTC);
+		Account account = new Account(request.getUsername(), request.getEmail(), encodedPassword,
+				UserRoleType.USER, false, now, now);
 		accountRepository.save(account);
 
 		String token = UUID.randomUUID().toString();
