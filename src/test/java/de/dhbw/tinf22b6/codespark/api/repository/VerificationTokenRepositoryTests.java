@@ -9,6 +9,7 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.test.context.ActiveProfiles;
 
 import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -24,7 +25,8 @@ class VerificationTokenRepositoryTests {
 
 	@Test
 	void testFindByTokenAndType_shouldReturnToken() {
-		Account account = new Account("user1", "test@example.com", "pass", null, true);
+		Account account = new Account("user1", "test@example.com", "pass", null,
+				true, LocalDateTime.now(),  LocalDateTime.now());
 		accountRepository.save(account);
 
 		VerificationToken token = new VerificationToken(

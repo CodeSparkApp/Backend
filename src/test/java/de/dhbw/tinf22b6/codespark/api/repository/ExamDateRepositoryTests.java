@@ -24,7 +24,8 @@ class ExamDateRepositoryTests {
 
 	@Test
 	void testFindByAccount_shouldReturnExamDate() {
-		Account account = new Account("student1", "student1@example.com", "password", UserRoleType.USER, true);
+		Account account = new Account("student1", "student1@example.com", "password", UserRoleType.USER,
+				true, LocalDateTime.now(), LocalDateTime.now());
 		account = accountRepository.save(account);
 
 		ExamDate examDate = new ExamDate(LocalDateTime.of(2025, 7, 15, 10, 0));

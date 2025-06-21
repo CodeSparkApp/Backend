@@ -63,7 +63,7 @@ class AccountControllerTests {
 				"user",
 				"email@example.com",
 				"https://photos.com/user-profile-photo",
-				LocalDateTime.of(2022, 1, 1, 12, 0)
+				LocalDateTime.of(2022, 1, 1, 12, 0, 0)
 		);
 		Mockito.when(accountService.getAccountDetails(any())).thenReturn(mockResponse);
 
@@ -73,7 +73,7 @@ class AccountControllerTests {
 				.andExpect(jsonPath("$.username").value("user"))
 				.andExpect(jsonPath("$.email").value("email@example.com"))
 				.andExpect(jsonPath("$.profile_image_url").value("https://photos.com/user-profile-photo"))
-				.andExpect(jsonPath("$.creation_date").value(LocalDateTime.of(2022, 1, 1, 12, 0)));
+				.andExpect(jsonPath("$.creation_date").value("2022-01-01T12:00:00"));
 	}
 
 	@Test
