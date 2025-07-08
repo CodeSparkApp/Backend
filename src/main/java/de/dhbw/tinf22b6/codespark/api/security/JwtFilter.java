@@ -20,7 +20,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
-import java.util.Collections;
+import java.util.List;
 
 @Component
 public class JwtFilter extends OncePerRequestFilter {
@@ -50,9 +50,12 @@ public class JwtFilter extends OncePerRequestFilter {
 			Account account = accountRepository.findByUsername(username)
 					.orElseThrow(() -> new UsernameNotFoundException("Username not found"));
 
+			List<SimpleGrantedAuthority> authorities = account.getRoles().stream()
+					.map(role -> new SimpleGrantedAuthority("ROLE_" + role.getName()))
+					.toList();
+
 			UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
-					// Prefix with 'ROLE_' so 'hasRole()' can be used instead of 'hasAuthority()'
-					account, null, Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + account.getRole().name()))
+					account, null, authorities
 			);
 
 			SecurityContext context = SecurityContextHolder.createEmptyContext();

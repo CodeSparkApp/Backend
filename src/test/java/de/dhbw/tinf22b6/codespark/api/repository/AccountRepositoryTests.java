@@ -1,6 +1,5 @@
 package de.dhbw.tinf22b6.codespark.api.repository;
 
-import de.dhbw.tinf22b6.codespark.api.common.UserRoleType;
 import de.dhbw.tinf22b6.codespark.api.model.Account;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -8,6 +7,7 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.test.context.ActiveProfiles;
 
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -21,7 +21,7 @@ class AccountRepositoryTests {
 	@Test
 	void testFindByUsername_shouldReturnAccount() {
 		Account account = new Account("john_doe", "john@example.com", "hashed_pwd",
-				UserRoleType.USER, true, LocalDateTime.now(), LocalDateTime.now());
+				true, Collections.emptySet(), LocalDateTime.now(), LocalDateTime.now());
 		accountRepository.save(account);
 
 		Optional<Account> result = accountRepository.findByUsername("john_doe");
@@ -33,7 +33,7 @@ class AccountRepositoryTests {
 	@Test
 	void findByEmail_shouldReturnAccount() {
 		Account account = new Account("jane_doe", "jane@example.com", "hashed_pwd",
-				UserRoleType.USER, false, LocalDateTime.now(), LocalDateTime.now());
+				false, Collections.emptySet(), LocalDateTime.now(), LocalDateTime.now());
 		accountRepository.save(account);
 
 		Optional<Account> result = accountRepository.findByEmail("jane@example.com");

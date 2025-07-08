@@ -1,15 +1,12 @@
 package de.dhbw.tinf22b6.codespark.api.model;
 
-import de.dhbw.tinf22b6.codespark.api.common.UserRoleType;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 @Getter
 @Setter
@@ -29,14 +26,25 @@ public class Account {
 	@Column(nullable = false)
 	private String password;
 
-	@Enumerated(EnumType.STRING)
-	private UserRoleType role;
-
 	@Column(length = 512)
 	private String profileImageUrl;
 
 	@Column(nullable = false)
 	private boolean verified;
+
+	@ManyToMany(fetch = FetchType.EAGER)
+	@JoinTable(
+			name = "account_role",
+			joinColumns = @JoinColumn(name = "account_id"),
+			inverseJoinColumns = @JoinColumn(name = "role_id")
+	)
+	private Set<Role> roles = new HashSet<>();
+
+	@Column(nullable = false, updatable = false)
+	private LocalDateTime creationDate;
+
+	@Column(nullable = false)
+	private LocalDateTime lastLogin;
 
 	@OneToOne(mappedBy = "account", cascade = CascadeType.ALL, orphanRemoval = true)
 	private Conversation conversation;
@@ -47,19 +55,13 @@ public class Account {
 	@OneToOne(mappedBy = "account", cascade = CascadeType.ALL, orphanRemoval = true)
 	private ExamDate examDate;
 
-	@Column(nullable = false, updatable = false)
-	private LocalDateTime creationDate;
-
-	@Column(nullable = false)
-	private LocalDateTime lastLogin;
-
-	public Account(String username, String email, String password, UserRoleType role, boolean verified,
+	public Account(String username, String email, String password, boolean verified, Set<Role> roles,
 				   LocalDateTime creationDate, LocalDateTime lastLogin) {
 		this.username = username;
 		this.email = email;
 		this.password = password;
-		this.role = role;
 		this.verified = verified;
+		this.roles = roles;
 		this.creationDate = creationDate;
 		this.lastLogin = lastLogin;
 	}
