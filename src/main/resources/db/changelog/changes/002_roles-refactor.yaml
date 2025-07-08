@@ -1,0 +1,100 @@
+databaseChangeLog:
+  - changeSet:
+      id: 2
+      author: denniskp
+      comment: "Remove old enum-based role column from account table"
+      changes:
+        - dropColumn:
+            tableName: account
+            columnName: role
+
+  - changeSet:
+      id: 2.1
+      author: denniskp
+      comment: "Create role table"
+      changes:
+        - createTable:
+            tableName: role
+            columns:
+              - column:
+                  name: id
+                  type: UUID
+                  constraints:
+                    primaryKey: true
+              - column:
+                  name: name
+                  type: VARCHAR(50)
+                  constraints:
+                    nullable: false
+                    unique: true
+              - column:
+                  name: description
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: true
+
+  - changeSet:
+      id: 2.2
+      author: denniskp
+      comment: "Insert default USER and ADMIN roles"
+      changes:
+        - insert:
+            tableName: role
+            columns:
+              - column: { name: id, valueComputed: random_uuid() }
+              - column: { name: name, value: USER }
+              - column: { name: description, value: Default user role }
+        - insert:
+            tableName: role
+            columns:
+              - column: { name: id, valueComputed: random_uuid() }
+              - column: { name: name, value: ADMIN }
+              - column: { name: description, value: Administrator role }
+
+  - changeSet:
+      id: 2.3
+      author: denniskp
+      comment: "Create account_role join table"
+      changes:
+        - createTable:
+            tableName: account_role
+            columns:
+              - column:
+                  name: account_id
+                  type: UUID
+                  constraints:
+                    nullable: false
+              - column:
+                  name: role_id
+                  type: UUID
+                  constraints:
+                    nullable: false
+        - addForeignKeyConstraint:
+            baseTableName: account_role
+            baseColumnNames: account_id
+            referencedTableName: account
+            referencedColumnNames: id
+            onDelete: CASCADE
+            constraintName: fk_account_role_account
+        - addForeignKeyConstraint:
+            baseTableName: account_role
+            baseColumnNames: role_id
+            referencedTableName: role
+            referencedColumnNames: id
+            onDelete: CASCADE
+            constraintName: fk_account_role_role
+
+  - changeSet:
+      id: 2.4
+      author: denniskp
+      comment: "Assign USER role to all existing accounts"
+      changes:
+        - sql:
+            comment: "Insert USER role assignments into account_role"
+            splitStatements: false
+            sql: |
+              INSERT INTO account_role (account_id, role_id)
+              SELECT a.id, r.id
+              FROM account a
+              CROSS JOIN role r
+              WHERE r.name = 'USER';

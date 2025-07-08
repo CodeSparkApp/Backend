@@ -9,6 +9,9 @@ spring:
       path: /h2-console
   liquibase:
     enabled: false
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
 
 auth:
   jwt:

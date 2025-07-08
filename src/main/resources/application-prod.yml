@@ -1,7 +1,2 @@
-spring:
-  jpa:
-    hibernate:
-      ddl-auto: none
-
 app:
   base-url: "https://codespark-api.up.railway.app"

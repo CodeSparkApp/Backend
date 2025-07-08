@@ -16,7 +16,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Component;
 
-import java.util.Collections;
+import java.util.List;
 
 @Component
 public class WebSocketAuthInterceptor implements ChannelInterceptor {
@@ -48,8 +48,12 @@ public class WebSocketAuthInterceptor implements ChannelInterceptor {
 			Account account = accountRepository.findByUsername(username)
 					.orElseThrow(() -> new UsernameNotFoundException("Username not found"));
 
+			List<SimpleGrantedAuthority> authorities = account.getRoles().stream()
+					.map(role -> new SimpleGrantedAuthority("ROLE_" + role.getName()))
+					.toList();
+
 			UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
-					account.getUsername(), null, Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + account.getRole().name()))
+					account.getUsername(), null, authorities
 			);
 
 			SecurityContextHolder.getContext().setAuthentication(authToken);

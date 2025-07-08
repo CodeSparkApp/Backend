@@ -1,6 +1,5 @@
 package de.dhbw.tinf22b6.codespark.api.repository;
 
-import de.dhbw.tinf22b6.codespark.api.common.UserRoleType;
 import de.dhbw.tinf22b6.codespark.api.model.Account;
 import de.dhbw.tinf22b6.codespark.api.model.ExamDate;
 import org.junit.jupiter.api.Test;
@@ -9,6 +8,7 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.test.context.ActiveProfiles;
 
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -24,8 +24,8 @@ class ExamDateRepositoryTests {
 
 	@Test
 	void testFindByAccount_shouldReturnExamDate() {
-		Account account = new Account("student1", "student1@example.com", "password", UserRoleType.USER,
-				true, LocalDateTime.now(), LocalDateTime.now());
+		Account account = new Account("student1", "student1@example.com", "password",
+				true, Collections.emptySet(), LocalDateTime.now(), LocalDateTime.now());
 		account = accountRepository.save(account);
 
 		ExamDate examDate = new ExamDate(LocalDateTime.of(2025, 7, 15, 10, 0));

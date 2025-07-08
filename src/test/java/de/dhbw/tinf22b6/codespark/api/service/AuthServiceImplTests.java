@@ -1,6 +1,5 @@
 package de.dhbw.tinf22b6.codespark.api.service;
 
-import de.dhbw.tinf22b6.codespark.api.common.UserRoleType;
 import de.dhbw.tinf22b6.codespark.api.exception.InvalidAccountCredentialsException;
 import de.dhbw.tinf22b6.codespark.api.exception.InvalidRefreshTokenException;
 import de.dhbw.tinf22b6.codespark.api.exception.UnverifiedAccountException;
@@ -15,6 +14,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import java.util.Collections;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -44,7 +44,7 @@ class AuthServiceImplTests {
 		account.setUsername("testuser");
 		account.setPassword("encoded");
 		account.setVerified(true);
-		account.setRole(UserRoleType.USER);
+		account.setRoles(Collections.emptySet());
 
 		when(accountRepository.findByUsername("testuser")).thenReturn(Optional.of(account));
 		when(passwordEncoder.matches("password", "encoded")).thenReturn(true);

@@ -2,13 +2,10 @@ package de.dhbw.tinf22b6.codespark.api.service;
 
 import com.cloudinary.Cloudinary;
 import com.cloudinary.utils.ObjectUtils;
-import de.dhbw.tinf22b6.codespark.api.common.UserRoleType;
 import de.dhbw.tinf22b6.codespark.api.common.VerificationTokenType;
-import de.dhbw.tinf22b6.codespark.api.exception.AccountAlreadyExistsException;
-import de.dhbw.tinf22b6.codespark.api.exception.ExpiredVerificationTokenException;
-import de.dhbw.tinf22b6.codespark.api.exception.ImageUploadException;
-import de.dhbw.tinf22b6.codespark.api.exception.InvalidVerificationTokenException;
+import de.dhbw.tinf22b6.codespark.api.exception.*;
 import de.dhbw.tinf22b6.codespark.api.model.Account;
+import de.dhbw.tinf22b6.codespark.api.model.Role;
 import de.dhbw.tinf22b6.codespark.api.model.VerificationToken;
 import de.dhbw.tinf22b6.codespark.api.payload.request.AccountCreateRequest;
 import de.dhbw.tinf22b6.codespark.api.payload.request.PasswordResetRequest;
@@ -16,7 +13,9 @@ import de.dhbw.tinf22b6.codespark.api.payload.request.RequestPasswordResetReques
 import de.dhbw.tinf22b6.codespark.api.payload.response.AccountDetailsResponse;
 import de.dhbw.tinf22b6.codespark.api.payload.response.UploadImageResponse;
 import de.dhbw.tinf22b6.codespark.api.repository.AccountRepository;
+import de.dhbw.tinf22b6.codespark.api.repository.RoleRepository;
 import de.dhbw.tinf22b6.codespark.api.repository.VerificationTokenRepository;
+import de.dhbw.tinf22b6.codespark.api.service.common.PredefinedUserRole;
 import de.dhbw.tinf22b6.codespark.api.service.interfaces.AccountService;
 import de.dhbw.tinf22b6.codespark.api.service.interfaces.EmailService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,14 +28,13 @@ import java.io.IOException;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
-import java.util.Map;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 @Service
 public class AccountServiceImpl implements AccountService {
 	private final AccountRepository accountRepository;
 	private final VerificationTokenRepository verificationTokenRepository;
+	private final RoleRepository roleRepository;
 	private final EmailService emailService;
 	private final PasswordEncoder passwordEncoder;
 	private final Cloudinary cloudinary;
@@ -44,12 +42,14 @@ public class AccountServiceImpl implements AccountService {
 
 	public AccountServiceImpl(@Autowired AccountRepository accountRepository,
 							  @Autowired VerificationTokenRepository verificationTokenRepository,
+							  @Autowired RoleRepository roleRepository,
 							  @Autowired EmailService emailService,
 							  @Autowired PasswordEncoder passwordEncoder,
 							  @Autowired Cloudinary cloudinary,
 							  @Autowired Environment env) {
 		this.accountRepository = accountRepository;
 		this.verificationTokenRepository = verificationTokenRepository;
+		this.roleRepository = roleRepository;
 		this.emailService = emailService;
 		this.passwordEncoder = passwordEncoder;
 		this.cloudinary = cloudinary;
@@ -77,10 +77,13 @@ public class AccountServiceImpl implements AccountService {
 			throw new AccountAlreadyExistsException("This username is already taken.");
 		}
 
+		Role userRole = roleRepository.findByName(PredefinedUserRole.USER.getName())
+				.orElseThrow(() -> new EntryNotFoundException("The requested role does not exists."));
+
 		String encodedPassword = passwordEncoder.encode(request.getPassword());
 		LocalDateTime now = LocalDateTime.now(ZoneOffset.UTC);
-		Account account = new Account(request.getUsername(), request.getEmail(), encodedPassword,
-				UserRoleType.USER, false, now, now);
+		Account account = new Account(request.getUsername(), request.getEmail(), encodedPassword, false,
+				Set.of(userRole), now, now);
 		accountRepository.save(account);
 
 		String token = UUID.randomUUID().toString();

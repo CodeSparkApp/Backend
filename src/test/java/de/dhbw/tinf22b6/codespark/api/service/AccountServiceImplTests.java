@@ -2,13 +2,13 @@ package de.dhbw.tinf22b6.codespark.api.service;
 
 import com.cloudinary.Cloudinary;
 import com.cloudinary.Uploader;
-import de.dhbw.tinf22b6.codespark.api.common.UserRoleType;
 import de.dhbw.tinf22b6.codespark.api.common.VerificationTokenType;
 import de.dhbw.tinf22b6.codespark.api.exception.AccountAlreadyExistsException;
 import de.dhbw.tinf22b6.codespark.api.exception.ExpiredVerificationTokenException;
 import de.dhbw.tinf22b6.codespark.api.exception.ImageUploadException;
 import de.dhbw.tinf22b6.codespark.api.exception.InvalidVerificationTokenException;
 import de.dhbw.tinf22b6.codespark.api.model.Account;
+import de.dhbw.tinf22b6.codespark.api.model.Role;
 import de.dhbw.tinf22b6.codespark.api.model.VerificationToken;
 import de.dhbw.tinf22b6.codespark.api.payload.request.AccountCreateRequest;
 import de.dhbw.tinf22b6.codespark.api.payload.request.PasswordResetRequest;
@@ -16,7 +16,9 @@ import de.dhbw.tinf22b6.codespark.api.payload.request.RequestPasswordResetReques
 import de.dhbw.tinf22b6.codespark.api.payload.response.AccountDetailsResponse;
 import de.dhbw.tinf22b6.codespark.api.payload.response.UploadImageResponse;
 import de.dhbw.tinf22b6.codespark.api.repository.AccountRepository;
+import de.dhbw.tinf22b6.codespark.api.repository.RoleRepository;
 import de.dhbw.tinf22b6.codespark.api.repository.VerificationTokenRepository;
+import de.dhbw.tinf22b6.codespark.api.service.common.PredefinedUserRole;
 import de.dhbw.tinf22b6.codespark.api.service.interfaces.AccountService;
 import de.dhbw.tinf22b6.codespark.api.service.interfaces.EmailService;
 import org.junit.jupiter.api.BeforeEach;
@@ -28,6 +30,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.time.Instant;
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
@@ -39,6 +42,7 @@ import static org.mockito.Mockito.*;
 class AccountServiceImplTests {
 	private AccountRepository accountRepository;
 	private VerificationTokenRepository verificationTokenRepository;
+	private RoleRepository roleRepository;
 	private EmailService emailService;
 	private PasswordEncoder passwordEncoder;
 	private Cloudinary cloudinary;
@@ -50,6 +54,7 @@ class AccountServiceImplTests {
 	void setUp() {
 		accountRepository = mock(AccountRepository.class);
 		verificationTokenRepository = mock(VerificationTokenRepository.class);
+		roleRepository = mock(RoleRepository.class);
 		emailService = mock(EmailService.class);
 		passwordEncoder = mock(PasswordEncoder.class);
 		cloudinary = mock(Cloudinary.class);
@@ -57,15 +62,15 @@ class AccountServiceImplTests {
 		file = mock(MultipartFile.class);
 
 		accountService = new AccountServiceImpl(
-				accountRepository, verificationTokenRepository,  emailService,
-				passwordEncoder, cloudinary, env
+				accountRepository, verificationTokenRepository, roleRepository,
+				emailService, passwordEncoder, cloudinary, env
 		);
 	}
 
 	@Test
 	void getAccountDetails_shouldReturnCorrectResponse() {
 		Account account = new Account("user", "user@example.com", "pass",
-				UserRoleType.USER, true, LocalDateTime.now(), LocalDateTime.now());
+				true, Collections.emptySet(), LocalDateTime.now(), LocalDateTime.now());
 		account.setId(UUID.randomUUID());
 		account.setProfileImageUrl("http://image.url");
 
@@ -78,9 +83,12 @@ class AccountServiceImplTests {
 
 	@Test
 	void createAccount_shouldCreateNewAccount() {
+		Role userRole = new Role(PredefinedUserRole.USER.getName(), "User");
+
 		AccountCreateRequest request = new AccountCreateRequest("user", "user@example.com", "password");
 		when(accountRepository.findByEmail("user@example.com")).thenReturn(Optional.empty());
 		when(accountRepository.findByUsername("user")).thenReturn(Optional.empty());
+		when(roleRepository.findByName(any(String.class))).thenReturn(Optional.of(userRole));
 		when(passwordEncoder.encode("password")).thenReturn("hashed");
 		when(env.getRequiredProperty(any(), eq(Long.class))).thenReturn(1000L);
 

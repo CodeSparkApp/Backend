@@ -2,7 +2,6 @@ package de.dhbw.tinf22b6.codespark.api.repository;
 
 import de.dhbw.tinf22b6.codespark.api.common.LessonProgressState;
 import de.dhbw.tinf22b6.codespark.api.common.LessonType;
-import de.dhbw.tinf22b6.codespark.api.common.UserRoleType;
 import de.dhbw.tinf22b6.codespark.api.model.Account;
 import de.dhbw.tinf22b6.codespark.api.model.Chapter;
 import de.dhbw.tinf22b6.codespark.api.model.TheoryLesson;
@@ -13,6 +12,7 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.test.context.ActiveProfiles;
 
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -35,8 +35,8 @@ class UserLessonProgressRepositoryTests {
 
 	@Test
 	void testFindByAccountAndLesson_shouldReturnProgress() {
-		Account account = accountRepository.save(new Account("testUser", "user@example.com", "pw", UserRoleType.USER,
-				true, LocalDateTime.now(),  LocalDateTime.now()));
+		Account account = accountRepository.save(new Account("testUser", "user@example.com", "pw",
+				true, Collections.emptySet(), LocalDateTime.now(),  LocalDateTime.now()));
 		Chapter chapter = chapterRepository.save(new Chapter("Chapter 1", "Intro", null, null));
 
 		TheoryLesson lesson = lessonRepository.save(new TheoryLesson("L1", "Theory", LessonType.THEORY,chapter, null, null, "Sample text"));
@@ -50,8 +50,8 @@ class UserLessonProgressRepositoryTests {
 
 	@Test
 	void testFindByAccountAndState_shouldReturnCorrectList() {
-		Account account = accountRepository.save(new Account("testUser2", "user2@example.com", "pw", UserRoleType.USER,
-				true, LocalDateTime.now(),  LocalDateTime.now()));
+		Account account = accountRepository.save(new Account("testUser2", "user2@example.com", "pw",
+				true, Collections.emptySet(), LocalDateTime.now(),  LocalDateTime.now()));
 		Chapter chapter = chapterRepository.save(new Chapter("Chapter 2", "Intro 2", null, null));
 
 		TheoryLesson lesson1 = lessonRepository.save(new TheoryLesson("L2", "Theory 2", LessonType.THEORY, chapter, null, null, "Text 1"));
@@ -68,8 +68,8 @@ class UserLessonProgressRepositoryTests {
 
 	@Test
 	void testFindByAccountAndLesson_shouldReturnEmptyWhenNone() {
-		Account account = accountRepository.save(new Account("user3", "user3@example.com", "pw", UserRoleType.USER,
-				true, LocalDateTime.now(),  LocalDateTime.now()));
+		Account account = accountRepository.save(new Account("user3", "user3@example.com", "pw",
+				true, Collections.emptySet(), LocalDateTime.now(),  LocalDateTime.now()));
 		Chapter chapter = chapterRepository.save(new Chapter("Chapter X", "X", null, null));
 		TheoryLesson lesson = lessonRepository.save(new TheoryLesson("L4", "No progress", LessonType.THEORY, chapter, null, null, "Empty"));
 
