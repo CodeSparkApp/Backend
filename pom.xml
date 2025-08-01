@@ -85,7 +85,7 @@
 		<dependency>
 			<groupId>io.github.sashirestela</groupId>
 			<artifactId>simple-openai</artifactId>
-			<version>3.21.0</version>
+			<version>3.22.0</version>
 			<exclusions>
 				<exclusion>
 					<groupId>org.slf4j</groupId>
